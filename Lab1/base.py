@@ -27,10 +27,10 @@ def read_and_wait(ser, wait_time):
                 print(serString.decode("Ascii"))
             except:
                 pass
-    else:
-        deltat = time.time() - start_time
-        if deltat > wait_time:
-            flag = False
+        else:
+            deltat = time.time() - start_time
+            if deltat > wait_time:
+                flag = False
     return output
 
 
