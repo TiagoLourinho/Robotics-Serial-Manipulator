@@ -57,7 +57,6 @@ def main():
     ############################################################################
     # ATTENTION: Each point used was previously recorded with DEFP instruction
     # (from a terminal console - you can use, for example, putty or hyperterminal
-    4
     # as terminal console)
     ############################################################################
     print("going to point P1")
