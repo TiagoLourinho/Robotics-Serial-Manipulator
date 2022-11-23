@@ -3,6 +3,11 @@
 import serial
 import time
 import datetime
+import os
+
+
+SERIAL_PORT = "COM4" if os.name == "nt" else "/dev/ttyUSB0"
+
 
 # This function listens the serial port for wait_time seconds
 # waiting for ASCII characters to be sent by the robot
@@ -36,7 +41,7 @@ def main():
     # (you must check in your computer which ports are available are, if necessary,
     # replace COM4 with the adequate COM)
     ser = serial.Serial(
-        "COM4",
+        SERIAL_PORT,
         baudrate=9600,
         bytesize=8,
         timeout=2,
