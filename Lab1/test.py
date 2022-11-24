@@ -1,3 +1,4 @@
+from random import shuffle
 import serial
 import time
 import os
@@ -14,44 +15,19 @@ ser = serial.Serial(
 )
 
 
-def encode_angles(angles: dict[int:int]):
-    encoder = {
-        1: {"angle": 250, "min": -31960, "max": 31950},
-        2: {"angle": 170, "min": -16960, "max": 25972},
-        3: {"angle": 225, "min": -28480, "max": 28942},
-        4: {"angle": 180, "min": -27048, "max": 28133},
-        5: {"angle": 360, "min": -31929, "max": 31956},
-    }
+class Point:
+    def __init__(self, cartesian: dict[str:int]):
 
-    return {
-        i: int(
-            encoder[i]["min"]
-            + (encoder[i]["max"] - encoder[i]["min"])
-            * (angles[i] / encoder[i]["angle"])
-        )
-        for i in angles.keys()
-    }
+        self.cartesian = cartesian
 
-
-def encode_coords(coords: dict[str:int]):
-    return {key: int(item * 10) for key, item in coords.items()}
-
-
-def create_vector(points: list[dict[str:int]]):
-
-    execute_command(f"DIMP points[{len(points)}]")
-
-    for i, point in enumerate(points):
-        execute_command(f"HERE points[{i+1}]")
-
-        for coord, value in point.items():
-            execute_command(f"SETPVC points[{i+1}] {coord} {value}")
+    def get_cartesian_coordinates(self) -> dict[str:int]:
+        return self.cartesian
 
 
 def read_and_wait(wait_time):
     """
     This function listens the serial port for wait_time seconds
-    waiting for ASCII characters to be sent by the robot
+    waiting for ASCII characters to be sent by the robots
     It returns the string of characters
     """
 
@@ -76,20 +52,67 @@ def read_and_wait(wait_time):
     return output
 
 
+def encode_coord_value(value: float):
+    return int(value * 10)
+
+
+def create_vector(points: list[Point]):
+    """Creates a vector by following the steps of special notes"""
+
+    # Step 1
+    execute_command(f"DIMP points[{len(points)}]")
+
+    for i, point in enumerate(points):
+
+        # Step 1
+        execute_command(f"HERE points[{i+1}]")
+
+        # To prevent from choosing a point outside the working zone (step 3)
+        error = True
+        while error:
+
+            coords = point.get_cartesian_coordinates()
+            for coord, value in [(key, coords[key]) for key in shuffle(coords.keys())]:
+                if (
+                    execute_command(
+                        f"SETPVC points[{i+1}] {coord.upper()} {encode_coord_value(value)}"
+                    )
+                    != "Done."
+                ):
+                    break
+            else:
+                error = False
+
+        # Step 4
+        execute_command(f"TEACH points[{i+1}]")
+        execute_command(f"MOVED points[{i+1}]")  # Move and wait or moved?
+        execute_command(f"HERE points[{i+1}]")
+
+
 def execute_command(command: str):
     ser.write(bytes(command + "\r", "utf-8"))
     time.sleep(0.5)
-    read_and_wait(2)
+    return read_and_wait(2)
 
 
 def main():
-    while True:
-        command = input().strip()
+    """while True:
+    command = input().strip()
 
-        if command == "QUIT":
-            break
+    if command == "QUIT":
+        break
 
-        execute_command(command)
+    execute_command(command)"""
+
+    points = [
+        Point({"x": 0, "y": 0, "z": 0}),
+        Point({"x": 0, "y": 0, "z": 0}),
+        Point({"x": 0, "y": 0, "z": 0}),
+    ]
+
+    create_vector(points)
+
+    execute_command(f"MOVES points 1 {len(points)}")
 
     ser.close()
 
