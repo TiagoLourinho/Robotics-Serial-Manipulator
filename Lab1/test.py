@@ -104,11 +104,37 @@ def main():
 
     execute_command(command)"""
 
+
+    x = 0
+    y = 0
+    z = 0
+
     points = [
-        Point({"x": 0, "y": 0, "z": 0}),
-        Point({"x": 0, "y": 0, "z": 0}),
-        Point({"x": 0, "y": 0, "z": 0}),
+        Point({"x": x, "y": y, "z": z}),
+        Point({"x": x + 1000, "y": y, "z": z}),
+        Point({"x": x + 1000, "y": y + 1000, "z": z}),
+        Point({"x": x, "y": y, "z": z}),
+        Point({"x": x, "y": y, "z": z + 500}),
     ]
+
+    """ points = [
+        Point({"x": x, "y": y, "z": z}),
+        Point({"x": x-1000, "y": y, "z": z}),
+        Point({"x": x-1000, "y": y+1000, "z": z}),
+        Point({"x": x, "y": y+1000, "z": z}),
+        Point({"x": x+500, "y": y+500, "z": z}),
+        Point({"x": x, "y": y, "z": z}),
+        Point({"x": x, "y": y+1000, "z": z}),
+        Point({"x": x, "y": y+1000, "z": z+500}),
+
+        Point({"x": x-200, "y": y+200, "z": z+500}),
+        Point({"x": x-200, "y": y+200, "z": z}),
+        Point({"x": x-200, "y": y+500, "z": z}),
+        Point({"x": x-500, "y": y+500, "z": z}),
+        Point({"x": x-500, "y": y+200, "z": z}),
+        Point({"x": x-200, "y": y+200, "z": z}),
+        Point({"x": x-200, "y": y+200, "z": z+500}),
+    ] """
 
     create_vector(points)
 
