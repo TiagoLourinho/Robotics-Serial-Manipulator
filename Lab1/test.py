@@ -3,16 +3,18 @@ import serial
 import time
 import os
 
+WRITE_TO_FILE = False
 
-ser = serial.Serial(
-    "COM4" if os.name == "nt" else "/dev/ttyUSB0",
-    baudrate=9600,
-    bytesize=8,
-    timeout=2,
-    parity="N",
-    xonxoff=0,
-    stopbits=serial.STOPBITS_ONE,
-)
+if not WRITE_TO_FILE:
+    ser = serial.Serial(
+        "COM4" if os.name == "nt" else "/dev/ttyUSB0",
+        baudrate=9600,
+        bytesize=8,
+        timeout=2,
+        parity="N",
+        xonxoff=0,
+        stopbits=serial.STOPBITS_ONE,
+    )
 
 
 class Point:
@@ -72,27 +74,33 @@ def create_vector(points: list[Point]):
         while error:
 
             coords = point.get_cartesian_coordinates()
-            for coord, value in [(key, coords[key]) for key in shuffle(coords.keys())]:
+            keys = list(coords.keys())
+            shuffle(keys)
+
+            for coord, value in [(key, coords[key]) for key in keys]:
                 if (
-                    execute_command(
-                        f"SETPVC points[{i+1}] {coord.upper()} {encode_coord_value(value)}"
-                    )
+                    execute_command(f"SETPVC points[{i+1}] {coord.upper()} {value}")
                     != "Done."
                 ):
                     break
             else:
                 error = False
 
-        # Step 4
+        """ # Step 4
         execute_command(f"TEACH points[{i+1}]")
         execute_command(f"MOVED points[{i+1}]")  # Move and wait or moved?
-        execute_command(f"HERE points[{i+1}]")
+        execute_command(f"HERE points[{i+1}]") """
 
 
 def execute_command(command: str):
-    ser.write(bytes(command + "\r", "utf-8"))
-    time.sleep(0.5)
-    return read_and_wait(2)
+    if not WRITE_TO_FILE:
+        ser.write(bytes(command + "\r", "utf-8"))
+        time.sleep(0.5)
+        return read_and_wait(2)
+    else:
+        with open(f"Commands.txt", "a") as f:
+            f.write(command + "\r")
+        return "Done."
 
 
 def main():
@@ -104,10 +112,9 @@ def main():
 
     execute_command(command)"""
 
-
-    x = 0
-    y = 0
-    z = 0
+    x = 5958
+    y = 76
+    z = 752
 
     points = [
         Point({"x": x, "y": y, "z": z}),
@@ -140,7 +147,8 @@ def main():
 
     execute_command(f"MOVES points 1 {len(points)}")
 
-    ser.close()
+    if not WRITE_TO_FILE:
+        ser.close()
 
 
 if __name__ == "__main__":
