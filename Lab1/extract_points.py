@@ -20,7 +20,7 @@ skeleton_img = (skeletonize(inverted_img) * 255).astype(np.uint8)
 contours, hierarchy = cv.findContours(
     skeleton_img,
     cv.RETR_TREE,
-    cv.CHAIN_APPROX_SIMPLE,
+    cv.CHAIN_APPROX_TC89_KCOS,
 )
 
 contour_image = np.full_like(original_img, 255)
