@@ -31,21 +31,18 @@ def create_vector_in_robot(points: list[Point]):
         writer.send_command(f"HERE points[{i+1}]")
 
         # Step 3 (preventing the creation of a temporary point outside the working zone)
+        enc_coords = point.get_encoded_cartesian_coordinates()
+        keys = list(enc_coords.keys())
+
         error = True
         while error:
-
-            coords = point.get_encoded_cartesian_coordinates()
-
-            # Randomize the order of the changed cartesian coordinates
-            keys = list(coords.keys())
-            shuffle(keys)
-
-            for coord, enc_value in [(key, coords[key]) for key in keys]:
+            for coord, enc_value in [(key, enc_coords[key]) for key in keys]:
 
                 # Step 1.3
                 ans = writer.send_command(f"SETPVC points[{i+1}] {coord} {enc_value}")
 
                 if is_error(ans):
+                    shuffle(keys)
                     break
             else:
                 error = False
@@ -58,7 +55,7 @@ def create_vector_in_robot(points: list[Point]):
         """
 
 
-def get_starting_point():
+def get_starting_point() -> Point:
     """Retrieves the initial point from the robot"""
 
     writer.send_command("DEFP cur")
@@ -94,8 +91,7 @@ def main():
     starting_point = get_starting_point()
 
     # Transform the points to the new reference frame
-    for point in points:
-        point.transform(starting_point)
+    points = list(filter(lambda point: point + starting_point, points))
 
     log(
         "Setting up by creating the trajectory (vector of points) to follow inside the robot"

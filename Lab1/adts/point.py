@@ -30,9 +30,5 @@ class Point:
     def decode(self, value: float) -> int:
         return int(value / 10)
 
-    def transform(self, new_origin: "Point"):
-        """Transforms the point given a new origin point (translation)"""
-
-        self.__X += new_origin.__X
-        self.__Y += new_origin.__Y
-        self.__Z += new_origin.__Z
+    def __add__(self, other: "Point") -> "Point":
+        return Point(self.__X + other.__X, self.__Y + other.__Y, self.__Z + other.__Z)
