@@ -5,6 +5,7 @@ from skimage.morphology import skeletonize
 from skimage.util import invert
 from sklearn.preprocessing import binarize
 import matplotlib.pyplot as plt
+import colorsys
 
 IMAGE_PATH = "Lab1/images/house.png"
 
@@ -38,10 +39,26 @@ skeleton_img = (skeletonize(inverted_img) * 255).astype(np.uint8)
 contours, hierarchy = cv.findContours(
     skeleton_img,
     cv.RETR_TREE,
-    cv.CHAIN_APPROX_TC89_KCOS,
+    cv.CHAIN_APPROX_NONE,
 )
 
 contour_image = np.full_like(original_img, 255)
+
+num = len(contours)
+HSV_tuples = [(x * 1.0 / (num + 1), 1.0, 1.0) for x in range(num)]
+RGB_tuples = np.array(list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))) * 255
+RGB_tuples = list(map(lambda x: (int(x[0]), int(x[1]), int(x[2])), RGB_tuples))
+contour_shortenned = [None] * len(contours)
+for i, contour in enumerate(contours):
+    copy_img = original_img.copy()
+    contour_shortenned[i] = cv.approxPolyDP(
+        contour, 0.01 * cv.arcLength(contour, True), True
+    )
+    for point in contour_shortenned[i]:
+        cv.circle(copy_img, tuple(point[0]), 1, RGB_tuples[i], 2)
+    cv.imshow(f"Countour {i}", copy_img)
+
+cv.waitKey(0)
 
 for i, cnt in enumerate(contours):
     color = tuple(np.random.choice(range(256), size=3).tolist())
@@ -58,3 +75,4 @@ cv.waitKey(0)
 cv.destroyAllWindows()
 
 plot_contours(contours)
+plot_contours(contour_shortenned)
