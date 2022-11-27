@@ -4,8 +4,26 @@ import os
 from skimage.morphology import skeletonize
 from skimage.util import invert
 from sklearn.preprocessing import binarize
+import matplotlib.pyplot as plt
 
 IMAGE_PATH = "Lab1/images/house.png"
+
+
+def plot_contours(contours):
+    for i, contour in enumerate(contours):
+        plt.subplot(1, len(contours), i + 1)
+        plt.scatter(contour[:, 0, 0], contour[:, 0, 1])
+
+        plt.xlim([0, original_img.shape[1]])
+        plt.ylim([0, original_img.shape[0]])
+
+        plt.xticks([])
+        plt.yticks([])
+
+        plt.gca().invert_yaxis()
+        plt.gca().set_aspect("equal", adjustable="box")
+
+    plt.show()
 
 
 original_img = cv.imread(os.path.normpath(IMAGE_PATH))
@@ -38,3 +56,5 @@ cv.imshow(f"Contours found ({len(contours)})", contour_image)
 
 cv.waitKey(0)
 cv.destroyAllWindows()
+
+plot_contours(contours)
