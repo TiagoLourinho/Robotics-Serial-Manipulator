@@ -4,7 +4,7 @@ import time
 
 
 class Writer:
-    """A class that handles the writing to a file or to the serial port"""
+    """Handles the writing to a file or to the serial port"""
 
     def __init__(self, write_to_serial: bool = False):
         self.__write_to_serial = write_to_serial
