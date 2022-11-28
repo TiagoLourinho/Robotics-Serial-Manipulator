@@ -11,6 +11,7 @@ ELEVATION = 10
 CONTOUR_MAX_ERROR = 0.01
 SPEED = 5
 PIXEL_TO_MM = 0.2645833333
+SLEEPING_TIME = 0.5
 
 
 def log(message, end="\n"):
@@ -20,7 +21,7 @@ def log(message, end="\n"):
 
 
 def main():
-    writer = Writer(WRITE_TO_SERIAL)
+    writer = Writer(WRITE_TO_SERIAL, SLEEPING_TIME)
     robot = Robot(writer, SPEED)
 
     log("Extracting the relevant points from the image to draw")
