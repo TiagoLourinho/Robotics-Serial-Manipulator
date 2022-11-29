@@ -4,10 +4,10 @@ from utils import log, get_scale
 
 ### Hyperparameters ###
 
-IMAGE_PATH = "Lab1/images/test_draw_1.png"
+IMAGE_PATH = "Lab1/images/house.png"
 SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
-WRITE_TO_SERIAL = False
+WRITE_TO_SERIAL = True
 SHOW_CONTOURS = True
 
 CONTOUR_MAX_ERROR = 0.01

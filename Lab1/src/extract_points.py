@@ -57,14 +57,15 @@ def find_contours(
     x, y, w, h = cv.boundingRect(contours[0])
     margin_x, margin_y = int(0.05 * w), int(0.05 * h)
     original_img = original_img[
-        max(0, y - margin_y) : min(original_img.shape[1], y + h + margin_y) + 1,
-        max(0, x - margin_x) : min(original_img.shape[0], x + w + margin_x) + 1,
+        max(0, y - margin_y) : min(original_img.shape[0], y + h + margin_y) + 1,
+        max(0, x - margin_x) : min(original_img.shape[1], x + w + margin_x) + 1,
     ]
     for cnt in contours:
         cnt -= np.array([max(0, x - margin_x), max(0, y - margin_y)])
 
     # Reduce the number of points per contour
     contours_reduced = [None] * len(contours)
+    diagonal = np.sqrt(original_img.shape[0] ** 2 + original_img.shape[1] ** 2)
     for i, contour in enumerate(contours):
 
         contours_reduced[i] = cv.approxPolyDP(
@@ -74,8 +75,16 @@ def find_contours(
         if show_contours:
             copy_img = original_img.copy()
             for point in contours_reduced[i]:
-                cv.circle(copy_img, tuple(point[0]), 1, (0, 0, 255), 5)
 
+                cv.circle(
+                    copy_img,
+                    tuple(point[0]),
+                    int(0.005 * diagonal),
+                    (0, 0, 255),
+                    -1,
+                )
+
+            cv.namedWindow(f"Countour {i}", cv.WINDOW_NORMAL)
             cv.imshow(f"Countour {i}", copy_img)
 
     if show_contours:
