@@ -38,7 +38,12 @@ class Robot:
         """Creates a vector of points by following the steps in the special notes of the lab slides"""
 
         # Step 1.1
-        self.writer.send_command(f"DIMP points[{len(points)}]")
+        ans = self.writer.send_command(f"DIMP points[{len(points)}]")
+
+        if self.is_error(ans):
+            self.writer.send_command(f"DELP points")
+            self.writer.send_command(f"YES")
+            self.writer.send_command(f"DIMP points[{len(points)}]")
 
         for i, point in enumerate(points):
 

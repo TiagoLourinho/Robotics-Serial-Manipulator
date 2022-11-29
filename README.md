@@ -15,3 +15,7 @@ Robot answers:
 'LISTPV cur\r\nPosition CUR\r\n 1:0        2:-3923    3:0        4: 1       5:0       \r\n X: 6508    Y:-353     Z: 8278    P: 231     R:-201    \r\n>'
 
 'SPEED 5\r\n\x00Done.\r\n>'
+
+
+MOVES points 1 len time
+time/number of points in ms
