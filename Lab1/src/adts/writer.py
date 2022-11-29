@@ -15,8 +15,13 @@ class Writer:
         self.write_to_serial = write_to_serial
         self.sleeping_time = sleeping_time
 
+        self.logs_file = os.path.normpath("Lab1/text_files/logs.txt")
+        # Create the file
+        with open(self.logs_file, "w") as f:
+            pass
+
         if write_to_serial:
-            self.__serial = serial.Serial(
+            self.serial_port = serial.Serial(
                 serial_port,
                 baudrate=9600,
                 bytesize=8,
@@ -27,10 +32,9 @@ class Writer:
             )
 
         else:
-            self.__file = os.path.normpath("Lab1/commands.txt")
-
+            self.commands_file = os.path.normpath("Lab1/text_files/commands.txt")
             # Create the file
-            with open(self.__file, "w") as f:
+            with open(self.commands_file, "w") as f:
                 pass
 
     def send_command(
@@ -39,13 +43,13 @@ class Writer:
         """Sends a command to the serial port or to the command file"""
 
         if self.write_to_serial:
-            self.__serial.write(bytes(command + "\r", "Ascii"))
+            self.serial_port.write(bytes(command + "\r", "Ascii"))
             time.sleep(self.sleeping_time)
 
             return self.read_and_wait(2)
 
         else:
-            with open(self.__file, "a") as f:
+            with open(self.commands_file, "a") as f:
                 f.write(command + "\r\n")
 
             # Emulate answers
@@ -66,9 +70,9 @@ class Writer:
         start_time = time.time()
         while flag:
             # Wait until there is data waiting in the serial buffer
-            if self.__serial.in_waiting > 0:
+            if self.serial_port.in_waiting > 0:
                 # Read data out of the buffer until a carriage return / new line is found
-                serString = self.__serial.readline()
+                serString = self.serial_port.readline()
                 # Print the contents of the serial data
                 try:
                     output += serString.decode("Ascii")
@@ -79,10 +83,14 @@ class Writer:
                 deltat = time.time() - start_time
                 if deltat > wait_time:
                     flag = False
+
+        with open(self.logs_file, "a") as f:
+            f.write(output)
+
         return output
 
     def close(self):
         """Closes the serial port"""
 
         if self.write_to_serial:
-            self.__serial.close()
+            self.serial_port.close()

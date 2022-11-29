@@ -1,4 +1,6 @@
 from random import shuffle
+from progressbar import progressbar
+
 
 from adts import Point, Writer
 
@@ -6,9 +8,8 @@ from adts import Point, Writer
 class Robot:
     """Scorbot ER-7 serial manipulator"""
 
-    def __init__(self, writer: Writer, speed: int):
+    def __init__(self, writer: Writer):
         self.writer = writer
-        writer.send_command(f"SPEED {speed}")
 
     def get_starting_point(self, write_to_serial: bool) -> Point:
         """Retrieves the initial point from the robot"""
@@ -45,13 +46,13 @@ class Robot:
             self.writer.send_command(f"YES")
             self.writer.send_command(f"DIMP points[{len(points)}]")
 
-        for i, point in enumerate(points):
+        for i in progressbar(range(len(points))):
 
             # Step 1.2
             self.writer.send_command(f"HERE points[{i+1}]")
 
             # Step 3 (preventing the creation of a temporary point outside the working zone)
-            enc_coords = self.get_encoded_cartesian_coordinates(point)
+            enc_coords = self.get_encoded_cartesian_coordinates(points[i])
             keys = list(enc_coords.keys())
 
             error = True

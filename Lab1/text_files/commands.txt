@@ -1,0 +1,157 @@
+DEFP cur
+HERE cur
+LISTPV cur
+DIMP points[38]
+HERE points[1]
+SETPVC points[1] X 6500
+SETPVC points[1] Y -350
+SETPVC points[1] Z 8370
+HERE points[2]
+SETPVC points[2] X 6528
+SETPVC points[2] Y -346
+SETPVC points[2] Z 8370
+HERE points[3]
+SETPVC points[3] X 6528
+SETPVC points[3] Y -346
+SETPVC points[3] Z 8270
+HERE points[4]
+SETPVC points[4] X 6503
+SETPVC points[4] Y -312
+SETPVC points[4] Z 8270
+HERE points[5]
+SETPVC points[5] X 6502
+SETPVC points[5] Y -269
+SETPVC points[5] Z 8270
+HERE points[6]
+SETPVC points[6] X 6558
+SETPVC points[6] Y -269
+SETPVC points[6] Z 8270
+HERE points[7]
+SETPVC points[7] X 6559
+SETPVC points[7] Y -314
+SETPVC points[7] Z 8270
+HERE points[8]
+SETPVC points[8] X 6547
+SETPVC points[8] Y -331
+SETPVC points[8] Z 8270
+HERE points[9]
+SETPVC points[9] X 6528
+SETPVC points[9] Y -346
+SETPVC points[9] Z 8270
+HERE points[10]
+SETPVC points[10] X 6528
+SETPVC points[10] Y -346
+SETPVC points[10] Z 8370
+HERE points[11]
+SETPVC points[11] X 6558
+SETPVC points[11] Y -313
+SETPVC points[11] Z 8370
+HERE points[12]
+SETPVC points[12] X 6558
+SETPVC points[12] Y -313
+SETPVC points[12] Z 8270
+HERE points[13]
+SETPVC points[13] X 6558
+SETPVC points[13] Y -269
+SETPVC points[13] Z 8270
+HERE points[14]
+SETPVC points[14] X 6552
+SETPVC points[14] Y -270
+SETPVC points[14] Z 8270
+HERE points[15]
+SETPVC points[15] X 6553
+SETPVC points[15] Y -287
+SETPVC points[15] Z 8270
+HERE points[16]
+SETPVC points[16] X 6543
+SETPVC points[16] Y -287
+SETPVC points[16] Z 8270
+HERE points[17]
+SETPVC points[17] X 6541
+SETPVC points[17] Y -270
+SETPVC points[17] Z 8270
+HERE points[18]
+SETPVC points[18] X 6502
+SETPVC points[18] Y -269
+SETPVC points[18] Z 8270
+HERE points[19]
+SETPVC points[19] X 6503
+SETPVC points[19] Y -311
+SETPVC points[19] Z 8270
+HERE points[20]
+SETPVC points[20] X 6558
+SETPVC points[20] Y -313
+SETPVC points[20] Z 8270
+HERE points[21]
+SETPVC points[21] X 6558
+SETPVC points[21] Y -313
+SETPVC points[21] Z 8370
+HERE points[22]
+SETPVC points[22] X 6505
+SETPVC points[22] Y -311
+SETPVC points[22] Z 8370
+HERE points[23]
+SETPVC points[23] X 6505
+SETPVC points[23] Y -311
+SETPVC points[23] Z 8270
+HERE points[24]
+SETPVC points[24] X 6528
+SETPVC points[24] Y -346
+SETPVC points[24] Z 8270
+HERE points[25]
+SETPVC points[25] X 6547
+SETPVC points[25] Y -331
+SETPVC points[25] Z 8270
+HERE points[26]
+SETPVC points[26] X 6559
+SETPVC points[26] Y -314
+SETPVC points[26] Z 8270
+HERE points[27]
+SETPVC points[27] X 6548
+SETPVC points[27] Y -311
+SETPVC points[27] Z 8270
+HERE points[28]
+SETPVC points[28] X 6505
+SETPVC points[28] Y -311
+SETPVC points[28] Z 8270
+HERE points[29]
+SETPVC points[29] X 6505
+SETPVC points[29] Y -311
+SETPVC points[29] Z 8370
+HERE points[30]
+SETPVC points[30] X 6543
+SETPVC points[30] Y -287
+SETPVC points[30] Z 8370
+HERE points[31]
+SETPVC points[31] X 6543
+SETPVC points[31] Y -287
+SETPVC points[31] Z 8270
+HERE points[32]
+SETPVC points[32] X 6553
+SETPVC points[32] Y -287
+SETPVC points[32] Z 8270
+HERE points[33]
+SETPVC points[33] X 6552
+SETPVC points[33] Y -270
+SETPVC points[33] Z 8270
+HERE points[34]
+SETPVC points[34] X 6541
+SETPVC points[34] Y -270
+SETPVC points[34] Z 8270
+HERE points[35]
+SETPVC points[35] X 6541
+SETPVC points[35] Y -284
+SETPVC points[35] Z 8270
+HERE points[36]
+SETPVC points[36] X 6543
+SETPVC points[36] Y -287
+SETPVC points[36] Z 8270
+HERE points[37]
+SETPVC points[37] X 6543
+SETPVC points[37] Y -287
+SETPVC points[37] Z 8370
+HERE points[38]
+SETPVC points[38] X 6500
+SETPVC points[38] Y -350
+SETPVC points[38] Z 8370
+MOVES points 1 38 11400

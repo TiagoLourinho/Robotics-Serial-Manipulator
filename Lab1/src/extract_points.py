@@ -5,18 +5,13 @@ from skimage.morphology import skeletonize
 from skimage.util import invert
 from sklearn.preprocessing import binarize
 
+
 from adts import Point
+from utils import log
 
 
-def get_list_points_to_draw(
-    image: str,
-    contour_max_error: float = 0.01,
-    elevation: int = 10,
-    show_contours: bool = False,
-):
+def get_list_points_to_draw(contours: list[np.array], elevation: int):
     """Connects all the contours into an unique list of `Point`'s"""
-
-    contours = find_contours(image, contour_max_error, show_contours)
 
     ret = []
 
@@ -40,7 +35,7 @@ def get_list_points_to_draw(
 def find_contours(
     image: str, contour_max_error: float = 0.01, show_contours: bool = False
 ):
-    """Finds the contours of the `image` and reduces the number of points per contour"""
+    """Finds the contours of the `image` and reduces the number of points per contour (the returned contours are sorted by area)"""
 
     original_img = cv.imread(os.path.normpath(image))
 
@@ -89,7 +84,7 @@ def find_contours(
 
     contours = contours_reduced
 
-    print(
+    log(
         f"Found {len(contours)} contours with a total of {sum(len(cnt) for cnt in contours)} points"
     )
 
