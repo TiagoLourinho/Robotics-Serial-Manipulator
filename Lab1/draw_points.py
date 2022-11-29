@@ -7,7 +7,7 @@ from extract_points import get_list_points_to_draw
 
 IMAGE_PATH = "Lab1/images/house.png"
 SERIAL_PORT = "/dev/ttyUSB0"  # COM4
-WRITE_TO_SERIAL = True
+WRITE_TO_SERIAL = False
 SHOW_CONTOURS = True
 ELEVATION = 10
 CONTOUR_MAX_ERROR = 0.01
@@ -32,7 +32,7 @@ def main():
     )
 
     log("Retrieving starting point of the robot")
-    starting_point = robot.get_starting_point()
+    starting_point = robot.get_starting_point(WRITE_TO_SERIAL)
 
     log("Transfering points to robot's referencial")
     points = list(map(lambda point: point * PIXEL_TO_MM + starting_point, points))

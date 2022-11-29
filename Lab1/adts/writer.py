@@ -33,7 +33,9 @@ class Writer:
             with open(self.__file, "w") as f:
                 pass
 
-    def send_command(self, command: str) -> str:
+    def send_command(
+        self, command: str, get_starting_point_to_test: str = False
+    ) -> str:
         """Sends a command to the serial port or to the command file"""
 
         if self.write_to_serial:
@@ -46,7 +48,11 @@ class Writer:
             with open(self.__file, "a") as f:
                 f.write(command + "\r\n")
 
-            return "Done.\r"
+            # Emulate answers
+            if not get_starting_point_to_test:
+                return "Done.\r"
+            else:
+                return "LISTPV cur\r\nPosition CUR\r\n 1:0        2:-3923    3:0        4: 1       5:0       \r\n X: 6508    Y:-353     Z: 8278    P: 231     R:-201    \r\n>"
 
     def read_and_wait(self, wait_time):
         """

@@ -10,12 +10,12 @@ class Robot:
         self.writer = writer
         writer.send_command(f"SPEED {speed}")
 
-    def get_starting_point(self) -> Point:
+    def get_starting_point(self, write_to_serial: bool) -> Point:
         """Retrieves the initial point from the robot"""
 
         self.writer.send_command("DEFP cur")
         self.writer.send_command("HERE cur")
-        tokens = self.writer.send_command("LISTPV cur")
+        tokens = self.writer.send_command("LISTPV cur", not write_to_serial)
 
         # See example of the response got from the robot in README.md
         tokens = tokens[tokens.index("1:") :].replace(": ", ":").split()[:-1]
