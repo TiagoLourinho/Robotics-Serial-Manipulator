@@ -57,11 +57,11 @@ def find_contours(
     x, y, w, h = cv.boundingRect(contours[0])
     margin_x, margin_y = int(0.05 * w), int(0.05 * h)
     original_img = original_img[
-        y - margin_y : y + h + margin_y + 1,
-        x - margin_x : x + w + margin_x + 1,
+        max(0, y - margin_y) : min(y + h + margin_y) + 1,
+        max(x - margin_x) : min(x + w + margin_x) + 1,
     ]
     for cnt in contours:
-        cnt -= np.array([x - margin_x, y - margin_y])
+        cnt -= np.array([max(x - margin_x), max(0, y - margin_y)])
 
     # Reduce the number of points per contour
     contours_reduced = [None] * len(contours)
