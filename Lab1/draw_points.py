@@ -1,17 +1,19 @@
 from datetime import datetime
 import numpy as np
+import os
 
 from adts import Point, Writer, Robot
 from extract_points import get_list_points_to_draw
 
 IMAGE_PATH = "Lab1/images/house.png"
-WRITE_TO_SERIAL = False
+SERIAL_PORT = "/dev/ttyUSB1"  # COM4
+WRITE_TO_SERIAL = True
 SHOW_CONTOURS = True
 ELEVATION = 10
 CONTOUR_MAX_ERROR = 0.01
 SPEED = 5
-PIXEL_TO_MM = 0.2645833333
-SLEEPING_TIME = 0.5
+PIXEL_TO_MM = 0.02645833333
+SLEEPING_TIME = 0
 
 
 def log(message, end="\n"):
@@ -21,7 +23,7 @@ def log(message, end="\n"):
 
 
 def main():
-    writer = Writer(WRITE_TO_SERIAL, SLEEPING_TIME)
+    writer = Writer(SERIAL_PORT, WRITE_TO_SERIAL, SLEEPING_TIME)
     robot = Robot(writer, SPEED)
 
     log("Extracting the relevant points from the image to draw")

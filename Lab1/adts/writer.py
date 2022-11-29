@@ -6,13 +6,18 @@ import time
 class Writer:
     """Handles the writing to a file or to the serial port"""
 
-    def __init__(self, write_to_serial: bool = False, sleeping_time: float = 0.5):
+    def __init__(
+        self,
+        serial_port: str,
+        write_to_serial: bool = False,
+        sleeping_time: float = 0.5,
+    ):
         self.write_to_serial = write_to_serial
         self.sleeping_time = sleeping_time
 
         if write_to_serial:
             self.__serial = serial.Serial(
-                "COM4" if os.name == "nt" else "/dev/ttyUSB0",
+                serial_port,
                 baudrate=9600,
                 bytesize=8,
                 timeout=2,
@@ -32,7 +37,7 @@ class Writer:
         """Sends a command to the serial port or to the command file"""
 
         if self.write_to_serial:
-            self.__serial.write(bytes(command + "\r\n", "utf-8"))
+            self.__serial.write(bytes(command + "\r", "utf-8"))
             time.sleep(self.sleeping_time)
 
             return self.read_and_wait(2)
@@ -41,7 +46,7 @@ class Writer:
             with open(self.__file, "a") as f:
                 f.write(command + "\r\n")
 
-            return "Done.\r\n"
+            return "Done.\r"
 
     def read_and_wait(self, wait_time):
         """
