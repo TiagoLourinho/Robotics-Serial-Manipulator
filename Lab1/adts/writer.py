@@ -37,7 +37,7 @@ class Writer:
         """Sends a command to the serial port or to the command file"""
 
         if self.write_to_serial:
-            self.__serial.write(bytes(command + "\r", "utf-8"))
+            self.__serial.write(bytes(command + "\r", "Ascii"))
             time.sleep(self.sleeping_time)
 
             return self.read_and_wait(2)
@@ -65,7 +65,7 @@ class Writer:
                 serString = self.__serial.readline()
                 # Print the contents of the serial data
                 try:
-                    output = serString.decode("Ascii")
+                    output += serString.decode("Ascii")
                     print(serString.decode("Ascii"))
                 except:
                     pass

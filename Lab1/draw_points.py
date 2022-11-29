@@ -6,7 +6,7 @@ from adts import Point, Writer, Robot
 from extract_points import get_list_points_to_draw
 
 IMAGE_PATH = "Lab1/images/house.png"
-SERIAL_PORT = "/dev/ttyUSB1"  # COM4
+SERIAL_PORT = "/dev/ttyUSB0"  # COM4
 WRITE_TO_SERIAL = True
 SHOW_CONTOURS = True
 ELEVATION = 10

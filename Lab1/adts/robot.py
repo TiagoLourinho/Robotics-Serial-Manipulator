@@ -15,7 +15,10 @@ class Robot:
 
         self.writer.send_command("DEFP cur")
         self.writer.send_command("HERE cur")
-        tokens = self.writer.send_command("LISTPV cur").split()
+        tokens = self.writer.send_command("LISTPV cur")
+
+        # See example of the response got from the robot in README.md
+        tokens = tokens[tokens.index("1:") :].replace(": ", ":").split()[:-1]
 
         # Writing to a file (the return is always Done.)
         if len(tokens) == 1:
@@ -71,7 +74,7 @@ class Robot:
     def is_error(self, ans: str):
         """Checks whether the response of the robot represents an error"""
 
-        return ans.strip() != "Done."
+        return not "Done." in ans
 
     def get_encoded_cartesian_coordinates(self, point: Point) -> dict[str:int]:
         """Encodes and returns the cartesian coordinates"""
