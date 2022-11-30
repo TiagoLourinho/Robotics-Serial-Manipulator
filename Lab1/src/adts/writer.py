@@ -10,10 +10,8 @@ class Writer:
         self,
         serial_port: str,
         write_to_serial: bool = False,
-        sleeping_time: float = 0.5,
     ):
         self.write_to_serial = write_to_serial
-        self.sleeping_time = sleeping_time
 
         self.logs_file = os.path.normpath("Lab1/text_files/logs.txt")
         # Create the file
@@ -44,7 +42,6 @@ class Writer:
 
         if self.write_to_serial:
             self.serial_port.write(bytes(command + "\r", "Ascii"))
-            time.sleep(self.sleeping_time)
 
             return self.read_and_wait(2)
 
@@ -58,32 +55,23 @@ class Writer:
             else:
                 return "LISTPV cur\r\nPosition CUR\r\n 1:0        2:-3923    3:0        4: 1       5:0       \r\n X: 6508    Y:-353     Z: 8278    P: 231     R:-201    \r\n>"
 
-    def read_and_wait(self, wait_time):
-        """
-        This function listens the serial port for wait_time seconds
-        waiting for ASCII characters to be sent by the robots
-        It returns the string of characters
-        """
+    def read_and_wait(self, timeout):
+        """Read the answer from the serial port"""
 
         output = ""
-        flag = True
-        start_time = time.time()
-        while flag:
-            # Wait until there is data waiting in the serial buffer
-            if self.serial_port.in_waiting > 0:
-                # Read data out of the buffer until a carriage return / new line is found
-                serString = self.serial_port.readline()
-                # Print the contents of the serial data
-                try:
-                    output += serString.decode("Ascii")
-                    print(serString.decode("Ascii"))
-                except:
-                    pass
-            else:
-                deltat = time.time() - start_time
-                if deltat > wait_time:
-                    flag = False
 
+        start_time = time.time()
+        while True:
+            to_read = self.serial_port.in_waiting
+
+            if to_read > 0:
+                output += self.serial_port.read(to_read).decode("Ascii")
+                break
+
+            if time.time() - start_time > timeout:
+                break
+
+        # Logs
         with open(self.logs_file, "a") as f:
             f.write(output)
 

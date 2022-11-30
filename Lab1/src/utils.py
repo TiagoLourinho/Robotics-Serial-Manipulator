@@ -14,4 +14,4 @@ def get_scale(desired_area: float, max_area_contour: np.array) -> float:
 
     _, _, w, h = cv.boundingRect(max_area_contour)
 
-    return desired_area / (w * h)
+    return np.sqrt(desired_area / (w * h))

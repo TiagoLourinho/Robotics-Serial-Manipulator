@@ -8,17 +8,16 @@ IMAGE_PATH = "Lab1/images/house.png"
 SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
 WRITE_TO_SERIAL = True
-SHOW_CONTOURS = True
+SHOW_CONTOURS = False
 
 CONTOUR_MAX_ERROR = 0.01
-DRAWING_AREA = 2500  # mm
+DRAWING_AREA = 5000  # mm^2
 ELEVATION = 10  # mm
-TIME_PER_POINT = 300  # ms
-SLEEPING_TIME = 0  # s
+TIME_PER_POINT = 150  # ms
 
 
 def main():
-    writer = Writer(SERIAL_PORT, WRITE_TO_SERIAL, SLEEPING_TIME)
+    writer = Writer(SERIAL_PORT, WRITE_TO_SERIAL)
     robot = Robot(writer)
 
     log("Extracting the relevant points from the image and creating the path")
