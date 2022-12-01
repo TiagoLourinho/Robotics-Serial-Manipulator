@@ -31,9 +31,9 @@ print(alpha,beta,gamma,delta)
 
 fig, ax = plt.subplots(1, 1)
 ax = plt.axes(projection='3d')
-ax.set_xlim(-1, 1)
-ax.set_ylim(-1, 1) 
-ax.set_zlim(-1, 1)
+ax.set_xlim(-2, 2)
+ax.set_ylim(-2, 2) 
+ax.set_zlim(-0, 2)
 
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
@@ -51,45 +51,40 @@ axd  = plt.axes([0.25, 0.1, 0.65, 0.03])
 
 
 base= Slider(axbase, 'base', 0.0 , 2*np.pi, valinit=0)
-alpha= Slider(axa, 'alpha', 0.0 , 2*np.pi, valinit=alpha)
-beta = Slider(axb, 'beta', 0.00, 2*np.pi, valinit=beta)
+alpha_= Slider(axa, 'alpha', -np.pi/2 , np.pi/2, valinit=alpha)
+beta = Slider(axb, 'beta',-np.pi/2 , np.pi/2, valinit=beta)
 gamma = Slider(axc, 'gamma', 0.00, 2*np.pi, valinit=gamma)
 delta = Slider(axd, 'delta', 0.00, 2*np.pi, valinit=delta)
 def update(val):
-    z_rot = np.array([[1 ,0 ,0,0],[0, np.cos(base.val),-np.sin(base.val),0],[0, np.sin(base.val),np.cos(base.val),0],[0, 0,0,1]]) #matriz de rotação para o plano xOy (visto de cima)
+    alpha,a,d,teta = (0,0,0.3585,base.val)
+    t01 = np.array([[np.cos(teta), -np.sin(teta), 0,a],[np.cos(alpha)*np.sin(teta), np.cos(alpha)*np.cos(teta), -np.sin(alpha),-np.sin(alpha)*d],[np.sin(alpha)*np.sin(teta), np.sin(alpha)*np.cos(teta),np.cos(alpha),np.cos(alpha)*d],[0, 0, 0,1]])
+    alpha,a,d,teta = (np.pi/2+alpha_.val,0,0.300,0)
+    t12= np.array([[np.cos(teta), -np.sin(teta), 0,a],[np.cos(alpha)*np.sin(teta), np.cos(alpha)*np.cos(teta), -np.sin(alpha),-np.sin(alpha)*d],[np.sin(alpha)*np.sin(teta), np.sin(alpha)*np.cos(teta),np.cos(alpha),np.cos(alpha)*d],[0, 0, 0,1]])
+    alpha,a,d,teta = (beta.val,0,0.350,0)
+    t23 = np.array([[np.cos(teta), -np.sin(teta), 0,a],[np.cos(alpha)*np.sin(teta), np.cos(alpha)*np.cos(teta), -np.sin(alpha),-np.sin(alpha)*d],[np.sin(alpha)*np.sin(teta), np.sin(alpha)*np.cos(teta),np.cos(alpha),np.cos(alpha)*d],[0, 0, 0,1]])
+    alpha,a,d,teta = (gamma.val,0,0.251,0)
+    t34 = np.array([[np.cos(teta), -np.sin(teta), 0,a],[np.cos(alpha)*np.sin(teta), np.cos(alpha)*np.cos(teta), -np.sin(alpha),-np.sin(alpha)*d],[np.sin(alpha)*np.sin(teta), np.sin(alpha)*np.cos(teta),np.cos(alpha),np.cos(alpha)*d],[0, 0, 0,1]])
+    transformations = np.array([t01,t12,t23,t34])
+    points = np.array([[0,0,0,1]])
     
-    points = np.array([[0,0,0]])
-    beta_ = beta.val-angle_dot([0,1,0],V[0])
-    gamma_ = gamma.val-angle_dot([0,1,0],V[1])
-    delta_ = delta.val-angle_dot([0,1,0],V[2])
-    #print(alpha,beta,gamma,delta)
-    #print(np.linalg.norm(V[3]))
-    V[0] = [0,np.linalg.norm(V[0])*np.cos(alpha.val),np.linalg.norm(V[0])*np.sin(alpha.val)]
-    V[1] = [0,np.linalg.norm(V[1])*np.cos(beta_),np.linalg.norm(V[1])*np.sin(beta_)]
-    V[2] = [0,np.linalg.norm(V[2])*np.cos(gamma_),np.linalg.norm(V[2])*np.sin(gamma_)]
-    V[3] = [0,np.linalg.norm(V[3])*np.cos(delta_),np.linalg.norm(V[3])*np.sin(delta_)]
-    print(np.linalg.norm(V[0]),np.linalg.norm(V[0])*np.cos(alpha.val)**2+np.linalg.norm(V[0])*np.sin(alpha.val)**2,V[0])
-    for i,vector in enumerate(V): points = np.append(points,[points[i]+vector],axis=0)
-    print(points)
-    #print(points,np.amax(points[:,1]))
-    #print(points.T.shape)
+    for i,transf in enumerate(transformations): 
+        print(points)
+        points = np.append(points,[np.dot(transf,points[i])],axis=0)
+
+    alpha,a,d,teta = (0,0,0.0,base.val)
+    t01 = np.array([[np.cos(teta), -np.sin(teta), 0,a],[np.cos(alpha)*np.sin(teta), np.cos(alpha)*np.cos(teta), -np.sin(alpha),-np.sin(alpha)*d],[np.sin(alpha)*np.sin(teta), np.sin(alpha)*np.cos(teta),np.cos(alpha),np.cos(alpha)*d],[0, 0, 0,1]])
     
-    #rotação
-    points = np.insert(points.T, 0, [1,1,1,1,1], axis=0)
-    points = np.matmul(z_rot, points)
-    points = np.delete(points, 0, 0)
+    points = t01.dot(points.T)
     points = points.T
     print(points)
-    
-    l.set_xdata(points[1:,0])
-    l.set_ydata(points[1:,1])
-    l.set_3d_properties(points[1:,2])
+    l.set_xdata(points[:,0])
+    l.set_ydata(points[:,1])
+    l.set_3d_properties(points[:,2])
     fig.canvas.draw_idle()
+
 base.on_changed(update)
-alpha.on_changed(update)
+alpha_.on_changed(update)
 beta.on_changed(update)
 gamma.on_changed(update)
 delta.on_changed(update)
 plt.show()
-
-
