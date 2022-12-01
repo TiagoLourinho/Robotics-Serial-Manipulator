@@ -25,7 +25,7 @@ def main():
         IMAGE_PATH, CONTOUR_MAX_ERROR, SHOW_CONTOURS_INFO
     )
     scale = get_scale(DRAWING_AREA, contours[0])
-    points = get_list_points_to_draw(contours, ELEVATION / scale)
+    points = get_list_points_to_draw(contours, is_closed, ELEVATION / scale)
 
     log("Retrieving starting point of the robot")
     starting_point = robot.get_starting_point(WRITE_TO_SERIAL)

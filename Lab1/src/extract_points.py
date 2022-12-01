@@ -94,7 +94,6 @@ def draw_contours(img: np.array, contours: list[np.array]):
             cv.imshow("Drawing contours", copy_img)
             cv.waitKey(500)
 
-    cv.waitKey(0)
     cv.destroyAllWindows()
 
 
