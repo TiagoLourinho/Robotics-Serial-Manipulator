@@ -10,6 +10,63 @@ from adts import Point
 from utils import log
 
 
+def divide_open_contour(contour: np.array) -> list[np.array]:
+    """Divides an open contour into smaller open contours"""
+
+    divided_contours = []
+    visited = set()
+
+    start_index = 0
+    going_back = False
+
+    for i in range(len(contour)):
+
+        pnt = tuple(contour[i][0].reshape((2,)))
+
+        if pnt not in visited:
+            visited.add(pnt)
+
+            if going_back:
+                going_back = False
+                start_index = i
+
+        elif not going_back:
+            divided_contours.append(contour[start_index:i])
+            going_back = True
+
+    if not going_back:
+        divided_contours.append(contour[start_index : len(contour)])
+
+    return divided_contours
+
+
+def filter_contours(
+    contours: list[np.array],
+) -> list[dict[str : list[np.array] | bool]]:
+    """Classify contours in open or close"""
+
+    new_contours = []
+    closed = []
+
+    for cnt in contours:
+
+        for i in range(1, len(cnt) - 1):
+
+            # Open contour (goes back)
+            if np.array_equal(cnt[i - 1], cnt[i + 1]):
+                for divided_contour in divide_open_contour(cnt):
+                    new_contours.append(divided_contour)
+                    closed.append(False)
+
+                break
+        # Close contour
+        else:
+            new_contours.append(cnt)
+            closed.append(True)
+
+    return new_contours, closed
+
+
 def draw_contours(img: np.array, contours: list[np.array]):
     """Draws the points from the contours in sequence"""
 
@@ -41,24 +98,29 @@ def draw_contours(img: np.array, contours: list[np.array]):
     cv.destroyAllWindows()
 
 
-def get_list_points_to_draw(contours: list[np.array], elevation: int):
+def get_list_points_to_draw(
+    contours: list[np.array], is_closed: list[bool], elevation: int
+):
     """Connects all the contours into an unique list of `Point`'s"""
 
     ret = []
 
-    for cnt in contours:
+    for i, cnt in enumerate(contours):
         # First point of the contour elevated
-        ret.append(Point(cnt[0][0][0], cnt[0][0][1], elevation))
+        ret.append(Point(*cnt[0][0], elevation))
 
         # All the points of the contour
         for pnt in cnt:
-            ret.append(Point(pnt[0][0], pnt[0][1], 0))
+            ret.append(Point(*pnt[0], 0))
 
-        # First point of the contour (to close the line)
-        ret.append(Point(cnt[0][0][0], cnt[0][0][1], 0))
+        if is_closed[i]:
+            # First point of the contour (to close the line)
+            ret.append(Point(*cnt[0][0], 0))
 
-        # Move pen up
-        ret.append(Point(cnt[0][0][0], cnt[0][0][1], elevation))
+            # Move pen up
+            ret.append(Point(*cnt[0][0], elevation))
+        else:
+            ret.append(Point(*cnt[-1][0], elevation))
 
     return ret
 
@@ -66,8 +128,7 @@ def get_list_points_to_draw(contours: list[np.array], elevation: int):
 def find_contours(
     image: str,
     contour_max_error: float = 0.01,
-    show_contours: bool = False,
-    drawing_animation: bool = False,
+    show_contours_info: bool = False,
 ):
     """Finds the contours of the `image` and reduces the number of points per contour (the returned contours are sorted by area)"""
 
@@ -97,16 +158,21 @@ def find_contours(
     for cnt in contours:
         cnt -= np.array([max(0, x - margin_x), max(0, y - margin_y)])
 
+    # Filter contours
+    contours, is_closed = filter_contours(contours)
+
     # Reduce the number of points per contour
     contours_reduced = [None] * len(contours)
     diagonal = np.sqrt(original_img.shape[0] ** 2 + original_img.shape[1] ** 2)
     for i, contour in enumerate(contours):
 
         contours_reduced[i] = cv.approxPolyDP(
-            contour, contour_max_error * cv.arcLength(contour, True), True
+            contour,
+            contour_max_error * cv.arcLength(contour, is_closed[i]),
+            is_closed[i],
         )
 
-        if show_contours:
+        if show_contours_info:
             copy_img = original_img.copy()
             for point in contours_reduced[i]:
 
@@ -121,7 +187,7 @@ def find_contours(
             cv.namedWindow(f"Countour {i}", cv.WINDOW_NORMAL)
             cv.imshow(f"Countour {i}", copy_img)
 
-    if show_contours:
+    if show_contours_info:
         cv.waitKey(0)
         cv.destroyAllWindows()
 
@@ -131,7 +197,7 @@ def find_contours(
         f"Found {len(contours)} contours with a total of {sum(len(cnt) for cnt in contours)} points"
     )
 
-    if drawing_animation:
+    if show_contours_info:
         draw_contours(original_img, contours)
 
-    return contours
+    return contours, is_closed

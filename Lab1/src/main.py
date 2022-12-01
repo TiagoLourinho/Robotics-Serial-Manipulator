@@ -4,12 +4,11 @@ from utils import log, get_scale
 
 ### Hyperparameters ###
 
-IMAGE_PATH = "Lab1/images/test_draw_2.png"
+IMAGE_PATH = "Lab1/images/test_draw_1.png"
 SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
 WRITE_TO_SERIAL = False
-SHOW_CONTOURS_POINTS = True
-DRAWING_ANIMATION = True
+SHOW_CONTOURS_INFO = True
 
 CONTOUR_MAX_ERROR = 0.01
 DRAWING_AREA = 5000  # mm^2
@@ -22,8 +21,8 @@ def main():
     robot = Robot(writer)
 
     log("Extracting the relevant points from the image and creating the path")
-    contours = find_contours(
-        IMAGE_PATH, CONTOUR_MAX_ERROR, SHOW_CONTOURS_POINTS, DRAWING_ANIMATION
+    contours, is_closed = find_contours(
+        IMAGE_PATH, CONTOUR_MAX_ERROR, SHOW_CONTOURS_INFO
     )
     scale = get_scale(DRAWING_AREA, contours[0])
     points = get_list_points_to_draw(contours, ELEVATION / scale)
