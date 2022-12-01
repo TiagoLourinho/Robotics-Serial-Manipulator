@@ -209,6 +209,6 @@ def find_contours(
     )
 
     if show_contours_info:
-        draw_contours(original_img, contours)
+        draw_contours(original_img, contours, is_closed)
 
     return contours, is_closed
