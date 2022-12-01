@@ -67,7 +67,7 @@ def filter_contours(
     return new_contours, closed
 
 
-def draw_contours(img: np.array, contours: list[np.array]):
+def draw_contours(img: np.array, contours: list[np.array], is_closed: list[bool]):
     """Draws the points from the contours in sequence"""
 
     copy_img = img.copy()
@@ -87,6 +87,18 @@ def draw_contours(img: np.array, contours: list[np.array]):
                 copy_img,
                 tuple(cnt[i][0].reshape((2,))),
                 tuple(cnt[i + 1][0].reshape((2,))),
+                RGB_tuples[n_cnt],
+                int(0.005 * diagonal),
+            )
+            cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
+            cv.imshow("Drawing contours", copy_img)
+            cv.waitKey(500)
+
+        if is_closed[n_cnt]:
+            cv.line(
+                copy_img,
+                tuple(cnt[-1][0].reshape((2,))),
+                tuple(cnt[0][0].reshape((2,))),
                 RGB_tuples[n_cnt],
                 int(0.005 * diagonal),
             )
