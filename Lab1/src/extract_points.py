@@ -4,10 +4,41 @@ import os
 from skimage.morphology import skeletonize
 from skimage.util import invert
 from sklearn.preprocessing import binarize
-
+import colorsys
 
 from adts import Point
 from utils import log
+
+
+def draw_contours(img: np.array, contours: list[np.array]):
+    """Draws the points from the contours in sequence"""
+
+    copy_img = img.copy()
+
+    # Get distinct colors
+    num = len(contours)
+    diagonal = np.sqrt(img.shape[0] ** 2 + img.shape[1] ** 2)
+    HSV_tuples = [(x * 1.0 / (num + 1), 1.0, 1.0) for x in range(num)]
+    RGB_tuples = (
+        np.array(list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))) * 255
+    )
+    RGB_tuples = list(map(lambda x: (int(x[0]), int(x[1]), int(x[2])), RGB_tuples))
+
+    for n_cnt, cnt in enumerate(contours):
+        for i in range(len(cnt) - 1):
+            cv.line(
+                copy_img,
+                tuple(cnt[i][0].reshape((2,))),
+                tuple(cnt[i + 1][0].reshape((2,))),
+                RGB_tuples[n_cnt],
+                int(0.005 * diagonal),
+            )
+            cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
+            cv.imshow("Drawing contours", copy_img)
+            cv.waitKey(500)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
 
 def get_list_points_to_draw(contours: list[np.array], elevation: int):
@@ -33,7 +64,10 @@ def get_list_points_to_draw(contours: list[np.array], elevation: int):
 
 
 def find_contours(
-    image: str, contour_max_error: float = 0.01, show_contours: bool = False
+    image: str,
+    contour_max_error: float = 0.01,
+    show_contours: bool = False,
+    drawing_animation: bool = False,
 ):
     """Finds the contours of the `image` and reduces the number of points per contour (the returned contours are sorted by area)"""
 
@@ -96,5 +130,8 @@ def find_contours(
     log(
         f"Found {len(contours)} contours with a total of {sum(len(cnt) for cnt in contours)} points"
     )
+
+    if drawing_animation:
+        draw_contours(original_img, contours)
 
     return contours
