@@ -178,6 +178,18 @@ def remove_duplicate_contours(
     return ret["contours"], ret["is_closed"]
 
 
+def slice_contour(contour: np.array, start: int, end: int) -> np.array:
+
+    if start == end:
+        return contour
+
+    if start < end:
+        return contour[start:end]
+
+    if start > end:
+        return np.append(contour[start:], contour[:end], 0)
+
+
 def validate_contours(contours: list[np.array], is_closed: list[bool]) -> tuple:
     """Final check to assure that contours are valid"""
 
@@ -185,23 +197,39 @@ def validate_contours(contours: list[np.array], is_closed: list[bool]) -> tuple:
     new_is_closed = []
 
     for n_cnt, cnt in enumerate(contours):
-        for n_pnt in range(len(cnt) - 1):
-
-            # If the pixels are not neighbors
-            if np.linalg.norm(cnt[n_pnt] - cnt[n_pnt + 1]) > np.sqrt(2):
-
-                for n_pnt_inv in range(len(cnt) - 1, 0, -1):
-                    if np.linalg.norm(cnt[n_pnt_inv] - cnt[n_pnt_inv - 1]) > np.sqrt(2):
-                        break
-
-                new_contours.append(np.vstack([cnt[n_pnt_inv:], cnt[0 : n_pnt + 1]]))
-                new_contours.append(cnt[n_pnt + 1 : n_pnt_inv])
-                new_is_closed.append(False)
-                new_is_closed.append(False)
+        i = 0
+        start_idx = None
+        added = 0
+        while True:
+            if added == len(cnt):
                 break
-        else:
-            new_contours.append(cnt)
-            new_is_closed.append(is_closed[n_cnt])
+
+            # If they are not neighbors (there was a jump)
+            if np.linalg.norm(cnt[i % len(cnt)] - cnt[(i + 1) % len(cnt)]) > np.sqrt(2):
+
+                # First jump
+                if start_idx is None:
+                    start_idx = i + 1
+                    i += 1
+                    continue
+
+                sliced_contour = slice_contour(
+                    cnt, start_idx % len(cnt), (i + 1) % len(cnt)
+                )
+                added += len(sliced_contour)
+
+                new_contours.append(sliced_contour)
+                new_is_closed.append(False)
+
+                start_idx = i + 1
+
+            # Valid contour (there wasn't a jump)
+            if i > len(cnt) and start_idx is None:
+                new_contours.append(cnt)
+                new_is_closed.append(is_closed[n_cnt])
+                break
+
+            i += 1
 
     return new_contours, new_is_closed
 
