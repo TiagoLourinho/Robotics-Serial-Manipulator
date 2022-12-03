@@ -357,8 +357,7 @@ def join_open_contours(
                         not joined[j]
                         and not is_closed[j]
                         and are_close(
-                            current_cnt[-1],
-                            contours[j][0],
+                            np.array([current_cnt[-1], contours[j][0]]),
                             diagonal,
                             join_contours_threshold,
                         )
@@ -371,8 +370,7 @@ def join_open_contours(
                 new_contours.append(current_cnt)
                 new_is_closed.append(
                     are_close(
-                        current_cnt[0],
-                        current_cnt[-1],
+                        np.array([current_cnt[0], current_cnt[-1]]),
                         diagonal,
                         join_contours_threshold,
                     )
@@ -393,7 +391,7 @@ def remove_point_contours(
 ) -> tuple[list[np.array] | list[bool]]:
     """Remove contours which points are all close to each other
 
-    Strategy:    If all the points are all close to the first point then remove that contour
+    Strategy:    If all the points are all close to the center point then remove that contour
     """
 
     new_contours = []
@@ -401,22 +399,24 @@ def remove_point_contours(
 
     for i, cnt in enumerate(contours):
 
-        # If a point far away from the first point is found then save this contour
-        for j in range(1, len(cnt)):
-            if not are_close(
-                contours[i][0], contours[i][j], diagonal, join_contours_threshold
-            ):
-                new_contours.append(cnt)
-                new_is_closed.append(is_closed[i])
-                break
+        if not are_close(cnt, diagonal, join_contours_threshold):
+            new_contours.append(cnt)
+            new_is_closed.append(is_closed[i])
 
     return new_contours, new_is_closed
 
 
-def are_close(px1: np.array, px2: np.array, diagonal: float, threshold: float) -> bool:
-    """Check if 2 pixels are close (inside of a circle defined by `diagonal` and `threshold`)"""
+def are_close(points: list[np.array], diagonal: float, threshold: float) -> bool:
+    """Check if all the pointss are close (inside of a circle centered in the mean and whose radius is defined by `diagonal` and `threshold`)"""
 
-    return np.linalg.norm(px1 - px2) < threshold * diagonal
+    center = np.mean(points, axis=0)
+    radius = threshold * diagonal
+
+    for pnt in points:
+        if np.linalg.norm(center - pnt) > radius:
+            return False
+
+    return True
 
 
 def get_crop_info(img: np.array) -> tuple[int]:
