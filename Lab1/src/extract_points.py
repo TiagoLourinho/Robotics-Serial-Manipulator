@@ -43,7 +43,7 @@ def get_list_points_to_draw(
 
 def handle_open_contours(
     contours: list[np.array],
-) -> list[dict[str : list[np.array] | bool]]:
+):
     """Classify contours in open or close"""
 
     new_contours = []
@@ -297,7 +297,7 @@ def find_contours(
 
         contours_reduced[i] = cv.approxPolyDP(
             contour,
-            contour_max_error,
+            diagonal * contour_max_error,
             is_closed[i],
         )
 
