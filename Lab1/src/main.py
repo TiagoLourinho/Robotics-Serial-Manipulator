@@ -4,13 +4,15 @@ from utils import log, get_scale
 
 ### Hyperparameters ###
 
-IMAGE_PATH = "Lab1/images/weird.png"
+IMAGE_PATH = "Lab1/images/fish_with_bubbles.jpeg"
 SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
 WRITE_TO_SERIAL = False
 SHOW_CONTOURS_INFO = True
 
 CONTOUR_MAX_ERROR = 5
+JOIN_CONTOURS_THRESHOLD = 0.05
+
 DRAWING_AREA = 5000  # mm^2
 ELEVATION = 10  # mm
 TIME_PER_POINT = 150  # ms
@@ -22,7 +24,7 @@ def main():
 
     log("Extracting the relevant points from the image and creating the path")
     contours, is_closed, max_area = find_contours(
-        IMAGE_PATH, CONTOUR_MAX_ERROR, SHOW_CONTOURS_INFO
+        IMAGE_PATH, CONTOUR_MAX_ERROR, JOIN_CONTOURS_THRESHOLD, SHOW_CONTOURS_INFO
     )
     scale = get_scale(DRAWING_AREA, max_area)
     points = get_list_points_to_draw(contours, is_closed, ELEVATION / scale)

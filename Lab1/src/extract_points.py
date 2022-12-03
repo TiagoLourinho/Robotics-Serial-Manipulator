@@ -10,245 +10,48 @@ from skimage.draw import line_nd
 from adts import Point
 from utils import log
 
+
 BLACK = 0
 WHITE = 255
 
 
 def get_list_points_to_draw(
     contours: list[np.array], is_closed: list[bool], elevation: int
-):
-    """Connects all the contours into an unique list of `Point`'s"""
+) -> list[Point]:
+    """Connects all the contours into an unique list of `Point`'s considering also the elevation"""
 
-    ret = []
+    points = []
 
     for i, cnt in enumerate(contours):
         # First point of the contour elevated
-        ret.append(Point(*cnt[0][0], elevation))
+        points.append(Point(*cnt[0][0], elevation))
 
-        # All the points of the contour
+        # Add all the points of the contour
         for pnt in cnt:
-            ret.append(Point(*pnt[0], 0))
+            points.append(Point(*pnt[0], 0))
 
+        # If contour is closed close the line, otherwise just lift pen up
         if is_closed[i]:
-            # First point of the contour (to close the line)
-            ret.append(Point(*cnt[0][0], 0))
+            points.append(Point(*cnt[0][0], 0))
+            points.append(Point(*cnt[0][0], elevation))
 
-            # Move pen up
-            ret.append(Point(*cnt[0][0], elevation))
         else:
-            ret.append(Point(*cnt[-1][0], elevation))
+            points.append(Point(*cnt[-1][0], elevation))
 
-    return ret
-
-
-def handle_open_contours(
-    contours: list[np.array],
-) -> list[dict[str : list[np.array] | bool]]:
-    """Classify contours in open or close"""
-
-    new_contours = []
-    closed = []
-
-    for cnt in contours:
-
-        for i in range(1, len(cnt) - 1):
-
-            # Open contour (goes back)
-            if np.array_equal(cnt[i - 1], cnt[i + 1]):
-                for divided_contour in divide_open_contour(cnt):
-                    new_contours.append(divided_contour)
-                    closed.append(False)
-
-                break
-        # Close contour
-        else:
-            new_contours.append(cnt)
-            closed.append(True)
-
-    return new_contours, closed
-
-
-def divide_open_contour(contour: np.array) -> list[np.array]:
-    """Divides an open contour into smaller open contours"""
-
-    divided_contours = []
-    visited = set()
-
-    start_index = 0
-    going_back = False
-
-    for i in range(len(contour)):
-
-        pnt = tuple(contour[i][0].reshape((2,)))
-
-        if pnt not in visited:
-            visited.add(pnt)
-
-            if going_back:
-                going_back = False
-                start_index = i
-
-        elif not going_back:
-            divided_contours.append(contour[start_index:i])
-            going_back = True
-
-    if not going_back:
-        divided_contours.append(contour[start_index : len(contour)])
-
-    return divided_contours
-
-
-def remove_duplicate_contours(
-    skeleton: np.array, contours: list[np.array], is_closed: list[bool]
-) -> tuple:
-    """Removes points from contours that would create a duplicate line"""
-
-    img = skeleton.copy()
-    filtered_contours = [list() for _ in range(len(contours))]
-
-    for n_cnt, cnt in enumerate(contours):
-
-        for n_pnt in range(len(cnt) - 1):
-
-            pnt1 = tuple(cnt[n_pnt][0].reshape((2,)))
-            pnt2 = tuple(cnt[n_pnt + 1][0].reshape((2,)))
-
-            rr, cc = line_nd(pnt1, pnt2, endpoint=True)
-
-            # The line would make a difference in the image
-            if np.sum(img[cc, rr] == WHITE):
-
-                cv.line(
-                    img,
-                    pnt1,
-                    pnt2,
-                    BLACK,
-                    1,
-                )
-                filtered_contours[n_cnt].append(cnt[n_pnt])
-
-                if n_pnt == len(cnt) - 2:
-                    filtered_contours[n_cnt].append(cnt[n_pnt + 1])
-
-    ret = {"contours": [], "is_closed": []}
-    for i in range(len(filtered_contours)):
-        if len(filtered_contours[i]):
-            ret["contours"].append(np.array(filtered_contours[i]))
-            ret["is_closed"].append(is_closed[i])
-
-    return validate_contours(ret["contours"], ret["is_closed"])
-
-
-def validate_contours(contours: list[np.array], is_closed: list[bool]) -> tuple:
-    """Final check to assure that contours are valid"""
-
-    new_contours = []
-    new_is_closed = []
-
-    for n_cnt, cnt in enumerate(contours):
-        i = 0
-        start_idx = None
-        added = 0
-        while True:
-            if added == len(cnt):
-                break
-
-            # If they are not neighbors (there was a jump)
-            if np.linalg.norm(cnt[i % len(cnt)] - cnt[(i + 1) % len(cnt)]) > np.sqrt(2):
-
-                # First jump
-                if start_idx is None:
-                    start_idx = i + 1
-                    i += 1
-                    continue
-
-                sliced_contour = slice_contour(
-                    cnt, start_idx % len(cnt), (i + 1) % len(cnt)
-                )
-                added += len(sliced_contour)
-
-                new_contours.append(sliced_contour)
-                new_is_closed.append(False)
-
-                start_idx = i + 1
-
-            # Valid contour (there wasn't a jump)
-            if i > len(cnt) and start_idx is None:
-                new_contours.append(cnt)
-                new_is_closed.append(is_closed[n_cnt])
-                break
-
-            i += 1
-
-    return new_contours, new_is_closed
-
-
-def remove_point_contours(
-    contours: list[np.array],
-    is_closed: list[bool],
-    diagonal: float,
-    threshold: float = 0.05,
-) -> tuple:
-
-    new_contours = []
-    new_is_closed = []
-
-    for n_cnt, cnt in enumerate(contours):
-        if len(cnt) > threshold * diagonal:
-            new_contours.append(cnt)
-            new_is_closed.append(is_closed[n_cnt])
-
-    return new_contours, new_is_closed
-
-
-def join_contours(
-    contours: list[np.array],
-    is_closed: list[bool],
-    diagonal: float,
-    threshold: float = 0.05,
-) -> tuple:
-    """Joins contours that are very close to each other"""
-
-    joined = [False] * len(contours)
-    new_contours = []
-    new_is_closed = []
-
-    for n_cnt, cnt in enumerate(contours):
-        if not is_closed[n_cnt] and not joined[n_cnt]:
-
-            temp_cnt = cnt
-            for i in range(n_cnt + 1, len(contours)):
-
-                if (
-                    not is_closed[i]
-                    and not joined[i]
-                    and np.linalg.norm(temp_cnt[-1] - contours[i][0])
-                    < threshold * diagonal
-                ):
-
-                    temp_cnt = np.append(temp_cnt, contours[i], 0)
-
-                    joined[i] = True
-
-            new_contours.append(temp_cnt)
-            new_is_closed.append(
-                np.linalg.norm(temp_cnt[0] - temp_cnt[-1][0]) < threshold * diagonal
-            )
-        elif not joined[n_cnt]:
-            new_contours.append(cnt)
-            new_is_closed.append(is_closed[n_cnt])
-
-    return new_contours, new_is_closed
+    return points
 
 
 def find_contours(
     image: str,
-    contour_max_error: float = 0.01,
+    contour_max_error: float,
+    join_contours_threshold: float,
     show_contours_info: bool = False,
-):
-    """Finds the contours of the `image` and reduces the number of points per contour (the returned contours are sorted by area)"""
+) -> tuple[list[np.array] | list[bool] | float]:
+    """Finds the contours of the `image` and filters them"""
 
     original_img = cv.imread(os.path.normpath(image))
+    original_img[original_img >= 127] = 255
+    original_img[original_img < 127] = 0
 
     # Find the skeletonized image (1 pixel wide)
     skeleton_img = binarize(
@@ -262,41 +65,39 @@ def find_contours(
         cv.RETR_TREE,
         cv.CHAIN_APPROX_NONE,
     )
+
+    # Sort by area
     contours = sorted(list(contours), key=lambda cnt: cv.contourArea(cnt), reverse=True)
 
     # Crop image
-
     x, y, w, h = get_crop_info(original_img)
-    original_img = original_img[
-        y : y + h + 1,
-        x : x + w + 1,
-    ]
-    skeleton_img = skeleton_img[
-        y : y + h + 1,
-        x : x + w + 1,
-    ]
+    original_img = original_img[y : y + h + 1, x : x + w + 1]
+    skeleton_img = skeleton_img[y : y + h + 1, x : x + w + 1]
 
+    # Adjust the contours to take into account the cropping
     for i in range(len(contours)):
         contours[i] = contours[i] - np.array([x, y])
 
-    # Filter contours
     diagonal = np.sqrt(original_img.shape[0] ** 2 + original_img.shape[1] ** 2)
 
-    contours, is_closed = handle_open_contours(contours)
-
-    contours, is_closed = remove_duplicate_contours(skeleton_img, contours, is_closed)
-
-    contours, is_closed = join_contours(contours, is_closed, diagonal)
-
-    contours, is_closed = remove_point_contours(contours, is_closed, diagonal)
+    # Filter contours
+    contours, is_closed = classify_contours(contours)
+    contours, is_closed = remove_duplicate_parts_in_contours(
+        skeleton_img, contours, is_closed
+    )
+    contours, is_closed = join_open_contours(
+        contours, is_closed, diagonal, join_contours_threshold
+    )
+    contours, is_closed = remove_point_contours(
+        contours, is_closed, diagonal, join_contours_threshold
+    )
 
     # Reduce the number of points per contour
     contours_reduced = [None] * len(contours)
-
-    for i, contour in enumerate(contours):
+    for i, cnt in enumerate(contours):
 
         contours_reduced[i] = cv.approxPolyDP(
-            contour,
+            cnt,
             contour_max_error,
             is_closed[i],
         )
@@ -330,6 +131,292 @@ def find_contours(
         draw_contours(original_img, contours, is_closed)
 
     return contours, is_closed, w * h
+
+
+def classify_contours(
+    contours: list[np.array],
+) -> tuple[list[np.array] | list[bool]]:
+    """Classify contours in open or close
+
+    Strategy:   A contour is open if one of it's points has the same point before and after it (because it goes back).
+                Otherwise, it's closed
+    """
+
+    new_contours = []
+    is_closed = []
+
+    for cnt in contours:
+
+        # Loop over contour points
+        for i in range(1, len(cnt) - 1):
+
+            # Point whose predecessor and sucessor are equal (open contour)
+            if np.array_equal(cnt[i - 1], cnt[i + 1]):
+
+                # Divide the open contour into smaller open contours
+                for divided_contour in divide_open_contour(cnt):
+                    new_contours.append(divided_contour)
+                    is_closed.append(False)
+
+                break
+
+        # Close contour
+        else:
+            new_contours.append(cnt)
+            is_closed.append(True)
+
+    return new_contours, is_closed
+
+
+def divide_open_contour(contour: np.array) -> list[np.array]:
+    """Divides an open contour into smaller open contours
+
+    In OpenCV, when a contour is open the returned points are repeated
+    because it couldn't close the contour so it goes back
+
+    Strategy:   Keep track of the visited points and check it it's going back or not
+                A contour start is identified by finding the first not visited point while going back
+                A contour end is identified by finding the first visited point while not going back
+    """
+
+    divided_contours = []
+
+    visited_points = set()  # Keep track of visited points
+    start_index = 0  # Start index of the divided contour
+    going_back = False  # Flag to check if points are going back a path or not
+
+    for i in range(len(contour)):
+
+        point = tuple(contour[i][0].reshape((2,)))
+
+        if point not in visited_points:
+            visited_points.add(point)
+
+            # If the point wasn't visited yet and it was going back,
+            # then the start of the next contour was found
+            if going_back:
+                going_back = False
+                start_index = i
+
+        # If the point was already visited and it was not going back,
+        # the end of the next contour was found
+        elif not going_back:
+            divided_contours.append(contour[start_index:i])
+            going_back = True
+
+    # Append the rest if it was meaningful (not going back)
+    if not going_back:
+        divided_contours.append(contour[start_index : len(contour)])
+
+    return divided_contours
+
+
+def remove_duplicate_parts_in_contours(
+    skeleton: np.array, contours: list[np.array], is_closed: list[bool]
+) -> tuple[list[np.array] | list[bool]]:
+    """Removes points from contours that would create a duplicate line
+
+    Strategy:   If the point from point A to point B would paint something new in the image, then point A is important
+    """
+
+    img = invert(skeleton).copy()
+    filtered_contours = [list() for _ in range(len(contours))]
+
+    for i, cnt in enumerate(contours):
+
+        for j in range(len(cnt) - 1):
+
+            pnt1 = tuple(cnt[j][0].reshape((2,)))
+            pnt2 = tuple(cnt[j + 1][0].reshape((2,)))
+
+            rr, cc = line_nd(pnt1, pnt2, endpoint=True)
+
+            # If the line would make a diffence and paint something white (meaningful line)
+            if np.sum(img[cc, rr] == BLACK):
+
+                cv.line(
+                    img,
+                    pnt1,
+                    pnt2,
+                    WHITE,
+                    1,
+                )
+                filtered_contours[i].append(cnt[j])
+
+        # Check if the closing line would make a difference
+        if is_closed[i]:
+            pnt1 = tuple(cnt[-1][0].reshape((2,)))
+            pnt2 = tuple(cnt[0][0].reshape((2,)))
+
+            rr, cc = line_nd(pnt1, pnt2, endpoint=True)
+
+            # If the line would make a diffence and paint something white (meaningful line)
+            if np.sum(img[cc, rr] == BLACK):
+
+                cv.line(
+                    img,
+                    pnt1,
+                    pnt2,
+                    WHITE,
+                    1,
+                )
+                filtered_contours[i].append(cnt[-1])
+
+    # Eliminate contours that were reduced to 0 points (completely duplicate)
+    new_is_closed = [
+        is_closed[i] for i, cnt in enumerate(filtered_contours) if len(cnt)
+    ]
+    filtered_contours = [np.array(cnt) for cnt in filtered_contours if len(cnt)]
+
+    return validate_contours(filtered_contours, new_is_closed)
+
+
+def validate_contours(
+    contours: list[np.array], is_closed: list[bool]
+) -> tuple[list[np.array] | list[bool]]:
+    """Check if the contours resulted from the removal of duplicate parts are valid
+
+    Strategy:   If while following the points of the contour there was a jump (2 pixels that are not neighbors)
+                then the contour needs to be divided
+                The start of the divided contour is found after the first jump
+                The end of the divided contour is found after the second jump
+    """
+
+    new_contours = []
+    new_is_closed = []
+
+    for i, cnt in enumerate(contours):
+
+        j = 0  # Variable to index contour points (need to use % to index to keep going around the contour)
+        start_index = None  # Start index of the new contour (None means that there wasn't a jump yet)
+        added_points = 0  # Number of points added
+        while True:
+
+            # All the points from the original contour were used to create new contours
+            if added_points == len(cnt):
+                break
+
+            # If they are not neighbors (there was a jump)
+            if np.linalg.norm(cnt[j % len(cnt)] - cnt[(j + 1) % len(cnt)]) > np.sqrt(2):
+
+                # First jump
+                if start_index is None:
+                    start_index = j + 1
+                    j += 1
+                    continue
+
+                sliced_contour = slice_contour(
+                    cnt, start_index % len(cnt), (j + 1) % len(cnt)
+                )
+                added_points += len(sliced_contour)
+
+                new_contours.append(sliced_contour)
+                new_is_closed.append(False)
+
+                start_index = j + 1
+
+            # Valid contour (there wasn't a jump after looping over the contour)
+            if j > len(cnt) and start_index is None:
+                new_contours.append(cnt)
+                new_is_closed.append(is_closed[i])
+                break
+
+            j += 1
+
+    return new_contours, new_is_closed
+
+
+def join_open_contours(
+    contours: list[np.array],
+    is_closed: list[bool],
+    diagonal: float,
+    join_contours_threshold: float,
+) -> tuple[list[np.array] | list[bool]]:
+    """Joins open contours that are close to each other
+
+    Strategy:   If the end of one contour is close to the start of another contour, then join them and keep going
+    """
+
+    joined = [False] * len(contours)
+    new_contours = []
+    new_is_closed = []
+
+    for i, cnt in enumerate(contours):
+
+        if not joined[i]:
+            if not is_closed[i]:
+
+                # If a open and not joined contour was found
+                # loop over the subsequent contours to check if its possible to join
+                # and then update current contour
+
+                current_cnt = cnt
+                for j in range(i + 1, len(contours)):
+
+                    if (
+                        not joined[j]
+                        and not is_closed[j]
+                        and are_close(
+                            current_cnt[-1],
+                            contours[j][0],
+                            diagonal,
+                            join_contours_threshold,
+                        )
+                    ):
+
+                        current_cnt = np.append(current_cnt, contours[j], 0)
+
+                        joined[j] = True
+
+                new_contours.append(current_cnt)
+                new_is_closed.append(
+                    are_close(
+                        current_cnt[0],
+                        current_cnt[-1],
+                        diagonal,
+                        join_contours_threshold,
+                    )
+                )
+
+            else:
+                new_contours.append(cnt)
+                new_is_closed.append(is_closed[i])
+
+    return new_contours, new_is_closed
+
+
+def remove_point_contours(
+    contours: list[np.array],
+    is_closed: list[bool],
+    diagonal: float,
+    join_contours_threshold: float,
+) -> tuple[list[np.array] | list[bool]]:
+    """Remove contours which points are all close to each other
+
+    Strategy:    If all the points are all close to the first point then remove that contour
+    """
+
+    new_contours = []
+    new_is_closed = []
+
+    for i, cnt in enumerate(contours):
+
+        # If a point far away from the first point is found then save this contour
+        for j in range(1, len(cnt)):
+            if not are_close(
+                contours[i][0], contours[i][j], diagonal, join_contours_threshold
+            ):
+                new_contours.append(cnt)
+                new_is_closed.append(is_closed[i])
+                break
+
+    return new_contours, new_is_closed
+
+
+def are_close(px1: np.array, px2: np.array, diagonal: float, threshold: float) -> bool:
+    """Check if 2 pixels are close (inside of a circle defined by `diagonal` and `threshold`)"""
+
+    return np.linalg.norm(px1 - px2) < threshold * diagonal
 
 
 def get_crop_info(img: np.array) -> tuple[int]:
@@ -389,26 +476,26 @@ def draw_contours(img: np.array, contours: list[np.array], is_closed: list[bool]
     )
     RGB_tuples = list(map(lambda x: (int(x[0]), int(x[1]), int(x[2])), RGB_tuples))
 
-    for n_cnt, cnt in enumerate(contours):
-        for i in range(len(cnt) - 1):
+    for i, cnt in enumerate(contours):
+        for j in range(len(cnt) - 1):
             cv.line(
                 copy_img,
-                tuple(cnt[i][0].reshape((2,))),
-                tuple(cnt[i + 1][0].reshape((2,))),
-                RGB_tuples[n_cnt],
-                int(0.005 * diagonal),
+                tuple(cnt[j][0].reshape((2,))),
+                tuple(cnt[j + 1][0].reshape((2,))),
+                RGB_tuples[i],
+                max(1, int(0.005 * diagonal)),
             )
             cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
             cv.imshow("Drawing contours", copy_img)
             cv.waitKey(500)
 
-        if is_closed[n_cnt]:
+        if is_closed[i]:
             cv.line(
                 copy_img,
                 tuple(cnt[-1][0].reshape((2,))),
                 tuple(cnt[0][0].reshape((2,))),
-                RGB_tuples[n_cnt],
-                int(0.005 * diagonal),
+                RGB_tuples[i],
+                max(1, int(0.005 * diagonal)),
             )
             cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
             cv.imshow("Drawing contours", copy_img)
