@@ -179,6 +179,7 @@ def remove_duplicate_contours(
 
 
 def slice_contour(contour: np.array, start: int, end: int) -> np.array:
+    """Slices contours taking into account relative position of start and end"""
 
     if start == end:
         return contour
@@ -234,6 +235,64 @@ def validate_contours(contours: list[np.array], is_closed: list[bool]) -> tuple:
     return new_contours, new_is_closed
 
 
+def remove_point_contours(
+    contours: list[np.array],
+    is_closed: list[bool],
+    diagonal: float,
+    threshold: float = 0.05,
+) -> tuple:
+
+    new_contours = []
+    new_is_closed = []
+
+    for n_cnt, cnt in enumerate(contours):
+        if len(cnt) > threshold * diagonal:
+            new_contours.append(cnt)
+            new_is_closed.append(is_closed[n_cnt])
+
+    return new_contours, new_is_closed
+
+
+def join_contours(
+    contours: list[np.array],
+    is_closed: list[bool],
+    diagonal: float,
+    threshold: float = 0.05,
+) -> tuple:
+    """Joins contours that are very close to each other"""
+
+    joined = [False] * len(contours)
+    new_contours = []
+    new_is_closed = []
+
+    for n_cnt, cnt in enumerate(contours):
+        if not is_closed[n_cnt] and not joined[n_cnt]:
+
+            temp_cnt = cnt
+            for i in range(n_cnt + 1, len(contours)):
+
+                if (
+                    not is_closed[i]
+                    and not joined[i]
+                    and np.linalg.norm(temp_cnt[-1] - contours[i][0])
+                    < threshold * diagonal
+                ):
+
+                    temp_cnt = np.append(temp_cnt, contours[i], 0)
+
+                    joined[i] = True
+
+            new_contours.append(temp_cnt)
+            new_is_closed.append(
+                np.linalg.norm(temp_cnt[0] - temp_cnt[-1][0]) < threshold * diagonal
+            )
+        elif not joined[n_cnt]:
+            new_contours.append(cnt)
+            new_is_closed.append(is_closed[n_cnt])
+
+    return new_contours, new_is_closed
+
+
 def find_contours(
     image: str,
     contour_max_error: float = 0.01,
@@ -274,6 +333,7 @@ def find_contours(
         cnt -= np.array([max(0, x - margin_x), max(0, y - margin_y)])
 
     # Filter contours
+    diagonal = np.sqrt(original_img.shape[0] ** 2 + original_img.shape[1] ** 2)
 
     contours, is_closed = handle_open_contours(contours)
 
@@ -281,9 +341,13 @@ def find_contours(
 
     contours, is_closed = validate_contours(contours, is_closed)
 
+    contours, is_closed = join_contours(contours, is_closed, diagonal)
+
+    contours, is_closed = remove_point_contours(contours, is_closed, diagonal)
+
     # Reduce the number of points per contour
     contours_reduced = [None] * len(contours)
-    diagonal = np.sqrt(original_img.shape[0] ** 2 + original_img.shape[1] ** 2)
+
     for i, contour in enumerate(contours):
 
         contours_reduced[i] = cv.approxPolyDP(
