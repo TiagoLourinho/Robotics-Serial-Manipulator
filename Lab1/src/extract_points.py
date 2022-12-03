@@ -10,6 +10,9 @@ from skimage.draw import line_nd
 from adts import Point
 from utils import log
 
+BLACK = 0
+WHITE = 255
+
 
 def get_list_points_to_draw(
     contours: list[np.array], is_closed: list[bool], elevation: int
@@ -36,48 +39,6 @@ def get_list_points_to_draw(
             ret.append(Point(*cnt[-1][0], elevation))
 
     return ret
-
-
-def draw_contours(img: np.array, contours: list[np.array], is_closed: list[bool]):
-    """Draws the points from the contours in sequence"""
-
-    copy_img = img.copy()
-
-    # Get distinct colors
-    num = len(contours)
-    diagonal = np.sqrt(img.shape[0] ** 2 + img.shape[1] ** 2)
-    HSV_tuples = [(x * 1.0 / (num + 1), 1.0, 1.0) for x in range(num)]
-    RGB_tuples = (
-        np.array(list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))) * 255
-    )
-    RGB_tuples = list(map(lambda x: (int(x[0]), int(x[1]), int(x[2])), RGB_tuples))
-
-    for n_cnt, cnt in enumerate(contours):
-        for i in range(len(cnt) - 1):
-            cv.line(
-                copy_img,
-                tuple(cnt[i][0].reshape((2,))),
-                tuple(cnt[i + 1][0].reshape((2,))),
-                RGB_tuples[n_cnt],
-                int(0.005 * diagonal),
-            )
-            cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
-            cv.imshow("Drawing contours", copy_img)
-            cv.waitKey(500)
-
-        if is_closed[n_cnt]:
-            cv.line(
-                copy_img,
-                tuple(cnt[-1][0].reshape((2,))),
-                tuple(cnt[0][0].reshape((2,))),
-                RGB_tuples[n_cnt],
-                int(0.005 * diagonal),
-            )
-            cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
-            cv.imshow("Drawing contours", copy_img)
-            cv.waitKey(500)
-
-    cv.destroyAllWindows()
 
 
 def handle_open_contours(
@@ -155,13 +116,13 @@ def remove_duplicate_contours(
             rr, cc = line_nd(pnt1, pnt2, endpoint=True)
 
             # The line would make a difference in the image
-            if np.sum(img[cc, rr] == 255):
+            if np.sum(img[cc, rr] == WHITE):
 
                 cv.line(
                     img,
                     pnt1,
                     pnt2,
-                    0,
+                    BLACK,
                     1,
                 )
                 filtered_contours[n_cnt].append(cnt[n_pnt])
@@ -175,20 +136,7 @@ def remove_duplicate_contours(
             ret["contours"].append(np.array(filtered_contours[i]))
             ret["is_closed"].append(is_closed[i])
 
-    return ret["contours"], ret["is_closed"]
-
-
-def slice_contour(contour: np.array, start: int, end: int) -> np.array:
-    """Slices contours taking into account relative position of start and end"""
-
-    if start == end:
-        return contour
-
-    if start < end:
-        return contour[start:end]
-
-    if start > end:
-        return np.append(contour[start:], contour[:end], 0)
+    return validate_contours(ret["contours"], ret["is_closed"])
 
 
 def validate_contours(contours: list[np.array], is_closed: list[bool]) -> tuple:
@@ -306,7 +254,7 @@ def find_contours(
     skeleton_img = binarize(
         invert(cv.cvtColor(original_img, cv.COLOR_BGR2GRAY)), threshold=127
     )
-    skeleton_img = (skeletonize(skeleton_img) * 255).astype(np.uint8)
+    skeleton_img = (skeletonize(skeleton_img) * WHITE).astype(np.uint8)
 
     # Find the contours
     contours, _ = cv.findContours(
@@ -314,23 +262,22 @@ def find_contours(
         cv.RETR_TREE,
         cv.CHAIN_APPROX_NONE,
     )
+    contours = sorted(list(contours), key=lambda cnt: cv.contourArea(cnt), reverse=True)
 
     # Crop image
-    contours = sorted(list(contours), key=lambda cnt: cv.contourArea(cnt), reverse=True)
-    x, y, w, h = cv.boundingRect(contours[0])
-    margin_x, margin_y = int(0.05 * w), int(0.05 * h)
-    shape = original_img.shape
+
+    x, y, w, h = get_crop_info(original_img)
     original_img = original_img[
-        max(0, y - margin_y) : min(shape[0], y + h + margin_y) + 1,
-        max(0, x - margin_x) : min(shape[1], x + w + margin_x) + 1,
+        y : y + h + 1,
+        x : x + w + 1,
     ]
     skeleton_img = skeleton_img[
-        max(0, y - margin_y) : min(shape[0], y + h + margin_y) + 1,
-        max(0, x - margin_x) : min(shape[1], x + w + margin_x) + 1,
+        y : y + h + 1,
+        x : x + w + 1,
     ]
 
-    for cnt in contours:
-        cnt -= np.array([max(0, x - margin_x), max(0, y - margin_y)])
+    for i in range(len(contours)):
+        contours[i] = contours[i] - np.array([x, y])
 
     # Filter contours
     diagonal = np.sqrt(original_img.shape[0] ** 2 + original_img.shape[1] ** 2)
@@ -338,8 +285,6 @@ def find_contours(
     contours, is_closed = handle_open_contours(contours)
 
     contours, is_closed = remove_duplicate_contours(skeleton_img, contours, is_closed)
-
-    contours, is_closed = validate_contours(contours, is_closed)
 
     contours, is_closed = join_contours(contours, is_closed, diagonal)
 
@@ -384,4 +329,89 @@ def find_contours(
     if show_contours_info:
         draw_contours(original_img, contours, is_closed)
 
-    return contours, is_closed
+    return contours, is_closed, w * h
+
+
+def get_crop_info(img: np.array) -> tuple[int]:
+    """Get the top left point and the width and height to crop the image"""
+
+    # Left barrier
+    for i in range(img.shape[1]):
+        if np.sum(img[:, i] == BLACK):
+            break
+    x = i
+
+    # Top barrier
+    for i in range(img.shape[0]):
+        if np.sum(img[i, :] == BLACK):
+            break
+    y = i
+
+    # Right barrier
+    for i in range(img.shape[1] - 1, -1, -1):
+        if np.sum(img[:, i] == BLACK):
+            break
+    w = i - x + 1
+
+    # Bottom barrier
+    for i in range(img.shape[0] - 1, -1, -1):
+        if np.sum(img[i, :] == BLACK):
+            break
+    h = i - y + 1
+
+    return x, y, w, h
+
+
+def slice_contour(contour: np.array, start: int, end: int) -> np.array:
+    """Slices contours taking into account relative position of start and end"""
+
+    if start == end:
+        return contour
+
+    if start < end:
+        return contour[start:end]
+
+    if start > end:
+        return np.append(contour[start:], contour[:end], 0)
+
+
+def draw_contours(img: np.array, contours: list[np.array], is_closed: list[bool]):
+    """Draws the points from the contours in sequence"""
+
+    copy_img = img.copy()
+
+    # Get distinct colors
+    num = len(contours)
+    diagonal = np.sqrt(img.shape[0] ** 2 + img.shape[1] ** 2)
+    HSV_tuples = [(x * 1.0 / (num + 1), 1.0, 1.0) for x in range(num)]
+    RGB_tuples = (
+        np.array(list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))) * WHITE
+    )
+    RGB_tuples = list(map(lambda x: (int(x[0]), int(x[1]), int(x[2])), RGB_tuples))
+
+    for n_cnt, cnt in enumerate(contours):
+        for i in range(len(cnt) - 1):
+            cv.line(
+                copy_img,
+                tuple(cnt[i][0].reshape((2,))),
+                tuple(cnt[i + 1][0].reshape((2,))),
+                RGB_tuples[n_cnt],
+                int(0.005 * diagonal),
+            )
+            cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
+            cv.imshow("Drawing contours", copy_img)
+            cv.waitKey(500)
+
+        if is_closed[n_cnt]:
+            cv.line(
+                copy_img,
+                tuple(cnt[-1][0].reshape((2,))),
+                tuple(cnt[0][0].reshape((2,))),
+                RGB_tuples[n_cnt],
+                int(0.005 * diagonal),
+            )
+            cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
+            cv.imshow("Drawing contours", copy_img)
+            cv.waitKey(500)
+
+    cv.destroyAllWindows()

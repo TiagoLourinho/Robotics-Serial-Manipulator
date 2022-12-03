@@ -9,9 +9,7 @@ def log(message, end="\n"):
     print(f'[{str(datetime.now()).split(".")[0]}]: {message}', end=end)
 
 
-def get_scale(desired_area: float, max_area_contour: np.array) -> float:
+def get_scale(desired_area: float, max_area: float) -> float:
     """Gets the scale to convert from pixels to mm"""
 
-    _, _, w, h = cv.boundingRect(max_area_contour)
-
-    return np.sqrt(desired_area / (w * h))
+    return np.sqrt(desired_area / (max_area))

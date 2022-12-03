@@ -4,7 +4,7 @@ from utils import log, get_scale
 
 ### Hyperparameters ###
 
-IMAGE_PATH = "Lab1/images/house.png"
+IMAGE_PATH = "Lab1/images/weird.png"
 SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
 WRITE_TO_SERIAL = False
@@ -21,10 +21,10 @@ def main():
     robot = Robot(writer)
 
     log("Extracting the relevant points from the image and creating the path")
-    contours, is_closed = find_contours(
+    contours, is_closed, max_area = find_contours(
         IMAGE_PATH, CONTOUR_MAX_ERROR, SHOW_CONTOURS_INFO
     )
-    scale = get_scale(DRAWING_AREA, contours[0])
+    scale = get_scale(DRAWING_AREA, max_area)
     points = get_list_points_to_draw(contours, is_closed, ELEVATION / scale)
 
     log("Retrieving starting point of the robot")
