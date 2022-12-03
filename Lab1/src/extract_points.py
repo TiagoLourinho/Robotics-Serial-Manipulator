@@ -352,7 +352,7 @@ def find_contours(
 
         contours_reduced[i] = cv.approxPolyDP(
             contour,
-            contour_max_error * cv.arcLength(contour, is_closed[i]),
+            contour_max_error,
             is_closed[i],
         )
 
