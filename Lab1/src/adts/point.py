@@ -17,3 +17,6 @@ class Point:
 
     def __rmul__(self, num: float) -> "Point":
         return Point(self.x * num, self.y * num, self.z * num)
+
+    def flip_horizontally(self) -> "Point":
+        return Point(self.x * -1, self.y, self.z)

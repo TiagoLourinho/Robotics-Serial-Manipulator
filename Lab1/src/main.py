@@ -33,7 +33,9 @@ def main():
     starting_point = robot.get_starting_point(WRITE_TO_SERIAL)
 
     log("Transfering points to robot's referencial")
-    points = list(map(lambda point: point * scale + starting_point, points))
+    points = list(
+        map(lambda point: point.flip_horizontally() * scale + starting_point, points)
+    )
 
     points.insert(0, starting_point + Point(0, 0, ELEVATION))
     points.append(starting_point + Point(0, 0, ELEVATION))

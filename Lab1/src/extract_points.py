@@ -502,3 +502,7 @@ def draw_contours(img: np.array, contours: list[np.array], is_closed: list[bool]
             cv.waitKey(500)
 
     cv.destroyAllWindows()
+    cv.namedWindow("Final result", cv.WINDOW_NORMAL)
+    cv.imshow("Final result", copy_img)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
