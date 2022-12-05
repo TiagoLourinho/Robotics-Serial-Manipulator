@@ -99,4 +99,4 @@ class Robot:
     def decode_cartesian(self, value: float) -> int:
         """Decodes a cartesian coordinate"""
 
-        return int(value / 10)
+        return value / 10

@@ -9,14 +9,14 @@ IMAGE_PATH = "Lab1/images/test_draw_2.png"
 SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
 WRITE_TO_SERIAL = True
-SHOW_CONTOURS_INFO = True
+SHOW_CONTOURS_INFO = False
 
 CONTOUR_MAX_ERROR = 20
 JOIN_CONTOURS_THRESHOLD = 0.01
 
 DRAWING_AREA = 5000  # mm^2
 ELEVATION = 10  # mm
-TIME_PER_POINT = 150  # ms
+TIME_PER_POINT = 100  # ms
 
 
 def main():
