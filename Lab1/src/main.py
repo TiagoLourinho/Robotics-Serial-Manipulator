@@ -42,6 +42,7 @@ def main():
     points.append(starting_point + Point(0, 0, ELEVATION))
 
     log("Creating the trajectory (vector of points) to follow inside the robot")
+    points = robot.add_rolls(points)
     robot.create_vector_of_points(points)
 
     log("Starting the draw")
