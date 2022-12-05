@@ -43,7 +43,7 @@ class Writer:
         if self.write_to_serial:
             self.serial_port.write(bytes(command + "\r", "Ascii"))
 
-            return self.read_and_wait(2)
+            return self.read_and_wait()
 
         else:
             with open(self.commands_file, "a") as f:
@@ -53,12 +53,14 @@ class Writer:
             if not get_starting_point_to_test:
                 return "Done.\r"
             else:
-                return "LISTPV cur\r\nPosition CUR\r\n 1:0        2:-3923    3:0        4: 1       5:0       \r\n X: 6508    Y:-353     Z: 8278    P: 231     R:-201    \r\n>"
+                return "LISTPV cur\r\nPosition CUR\r\n 1: 3004        2:-1140    3:-8085        4: 2893       5:-811       \r\n X: 7194    Y: 1134     Z: 4719    P:-103     R:-277    \r\n>"
 
-    def read_and_wait(self, timeout):
+    def read_and_wait(self, time_until_first_write=0.01, time_between_writes=0.3):
         """Read the answer from the serial port"""
 
         output = ""
+
+        time.sleep(time_until_first_write)
 
         start_time = time.time()
         while True:
@@ -66,9 +68,9 @@ class Writer:
 
             if to_read > 0:
                 output += self.serial_port.read(to_read).decode("Ascii")
-                break
+                start_time = time.time()
 
-            if time.time() - start_time > timeout:
+            if time.time() - start_time > time_between_writes:
                 break
 
         # Logs
