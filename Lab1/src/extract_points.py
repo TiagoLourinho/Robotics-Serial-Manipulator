@@ -46,7 +46,7 @@ def find_contours(
     contour_max_error: float,
     join_contours_threshold: float,
     show_contours_info: bool = False,
-) -> tuple[list[np.array] | list[bool] | float]:
+) -> tuple:
     """Finds the contours of the `image` and filters them"""
 
     original_img = cv.imread(os.path.normpath(image))
@@ -135,7 +135,7 @@ def find_contours(
 
 def classify_contours(
     contours: list[np.array],
-) -> tuple[list[np.array] | list[bool]]:
+) -> tuple:
     """Classify contours in open or close
 
     Strategy:   A contour is open if one of it's points has the same point before and after it (because it goes back).
@@ -213,7 +213,7 @@ def divide_open_contour(contour: np.array) -> list[np.array]:
 
 def remove_duplicate_parts_in_contours(
     skeleton: np.array, contours: list[np.array], is_closed: list[bool]
-) -> tuple[list[np.array] | list[bool]]:
+) -> tuple:
     """Removes points from contours that would create a duplicate line
 
     Strategy:   If the point from point A to point B would paint something new in the image, then point A is important
@@ -271,9 +271,7 @@ def remove_duplicate_parts_in_contours(
     return validate_contours(filtered_contours, new_is_closed)
 
 
-def validate_contours(
-    contours: list[np.array], is_closed: list[bool]
-) -> tuple[list[np.array] | list[bool]]:
+def validate_contours(contours: list[np.array], is_closed: list[bool]) -> tuple:
     """Check if the contours resulted from the removal of duplicate parts are valid
 
     Strategy:   If while following the points of the contour there was a jump (2 pixels that are not neighbors)
@@ -331,7 +329,7 @@ def join_open_contours(
     is_closed: list[bool],
     diagonal: float,
     join_contours_threshold: float,
-) -> tuple[list[np.array] | list[bool]]:
+) -> tuple:
     """Joins open contours that are close to each other
 
     Strategy:   If the end of one contour is close to the start of another contour, then join them and keep going
@@ -388,7 +386,7 @@ def remove_point_contours(
     is_closed: list[bool],
     diagonal: float,
     join_contours_threshold: float,
-) -> tuple[list[np.array] | list[bool]]:
+) -> tuple:
     """Remove contours which points are all close to each other
 
     Strategy:    If all the points are all close to the center point then remove that contour
