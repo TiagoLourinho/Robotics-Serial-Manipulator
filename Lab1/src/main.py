@@ -46,7 +46,7 @@ def main():
 
     log("Starting the draw")
     writer.send_command(
-        f"MOVES points 1 {len(points)} {int(TIME_PER_POINT*len(points))}"
+        f"MOVES points 1 {len(points)} {round(TIME_PER_POINT*len(points))}"
     )
 
     log("Exiting")

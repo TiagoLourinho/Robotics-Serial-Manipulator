@@ -109,7 +109,7 @@ def find_contours(
                 cv.circle(
                     copy_img,
                     tuple(point[0]),
-                    int(0.005 * diagonal),
+                    round(0.005 * diagonal),
                     (0, 0, 255),
                     -1,
                 )
@@ -483,7 +483,7 @@ def draw_contours(img: np.array, contours: list[np.array], is_closed: list[bool]
                 tuple(cnt[j][0].reshape((2,))),
                 tuple(cnt[j + 1][0].reshape((2,))),
                 RGB_tuples[i],
-                max(1, int(0.005 * diagonal)),
+                max(1, round(0.005 * diagonal)),
             )
             cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
             cv.imshow("Drawing contours", copy_img)
@@ -495,7 +495,7 @@ def draw_contours(img: np.array, contours: list[np.array], is_closed: list[bool]
                 tuple(cnt[-1][0].reshape((2,))),
                 tuple(cnt[0][0].reshape((2,))),
                 RGB_tuples[i],
-                max(1, int(0.005 * diagonal)),
+                max(1, round(0.005 * diagonal)),
             )
             cv.namedWindow("Drawing contours", cv.WINDOW_NORMAL)
             cv.imshow("Drawing contours", copy_img)

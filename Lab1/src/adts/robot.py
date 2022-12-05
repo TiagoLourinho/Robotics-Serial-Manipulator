@@ -94,7 +94,7 @@ class Robot:
     def encode_cartesian(self, value: float) -> int:
         """Encodes a cartesian coordinate"""
 
-        return int(value * 10)
+        return round(value * 10)
 
     def decode_cartesian(self, value: float) -> int:
         """Decodes a cartesian coordinate"""

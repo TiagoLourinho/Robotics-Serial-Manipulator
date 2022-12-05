@@ -56,12 +56,10 @@ class Writer:
                 # Dummy response in case of not being connected to serial port
                 return "LISTPV cur\r\nPosition CUR\r\n 1: 3004        2:-1140    3:-8085        4: 2893       5:-811       \r\n X: 7194    Y: 1134     Z: 4719    P:-103     R:-277    \r\n>"
 
-    def read_and_wait(self, time_until_first_write=0.01, time_between_writes=0.3):
+    def read_and_wait(self, max_time_between_writes=0.3):
         """Read the answer from the serial port"""
 
         output = ""
-
-        time.sleep(time_until_first_write)
 
         start_time = time.time()
         while True:
@@ -69,9 +67,13 @@ class Writer:
 
             if to_read > 0:
                 output += self.serial_port.read(to_read).decode("Ascii")
+
+                if ">" in output:
+                    break
+
                 start_time = time.time()
 
-            if time.time() - start_time > time_between_writes:
+            if time.time() - start_time > max_time_between_writes:
                 break
 
         # Logs
