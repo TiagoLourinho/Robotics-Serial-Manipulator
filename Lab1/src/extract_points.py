@@ -53,6 +53,11 @@ def find_contours(
     original_img[original_img >= 127] = 255
     original_img[original_img < 127] = 0
 
+    # Crop image
+    x, y, w, h = get_crop_info(original_img)
+    original_img = original_img[y : y + h + 1, x : x + w + 1]
+    diagonal = np.sqrt(original_img.shape[0] ** 2 + original_img.shape[1] ** 2)
+
     # Find the skeletonized image (1 pixel wide)
     skeleton_img = binarize(
         invert(cv.cvtColor(original_img, cv.COLOR_BGR2GRAY)), threshold=127
@@ -69,17 +74,6 @@ def find_contours(
     # Sort by area
     contours = sorted(list(contours), key=lambda cnt: cv.contourArea(cnt), reverse=True)
 
-    # Crop image
-    x, y, w, h = get_crop_info(original_img)
-    original_img = original_img[y : y + h + 1, x : x + w + 1]
-    skeleton_img = skeleton_img[y : y + h + 1, x : x + w + 1]
-
-    # Adjust the contours to take into account the cropping
-    for i in range(len(contours)):
-        contours[i] = contours[i] - np.array([x, y])
-
-    diagonal = np.sqrt(original_img.shape[0] ** 2 + original_img.shape[1] ** 2)
-
     # Filter contours
     contours, is_closed = classify_contours(contours)
     contours, is_closed = remove_duplicate_parts_in_contours(
@@ -91,37 +85,14 @@ def find_contours(
     contours, is_closed = remove_point_contours(
         contours, is_closed, diagonal, join_contours_threshold
     )
-
-    # Reduce the number of points per contour
-    contours_reduced = [None] * len(contours)
-    for i, cnt in enumerate(contours):
-
-        contours_reduced[i] = cv.approxPolyDP(
-            cnt,
-            contour_max_error,
-            is_closed[i],
-        )
-
-        if show_contours_info:
-            copy_img = original_img.copy()
-            for point in contours_reduced[i]:
-
-                cv.circle(
-                    copy_img,
-                    tuple(point[0]),
-                    round(0.005 * diagonal),
-                    (0, 0, 255),
-                    -1,
-                )
-
-            cv.namedWindow(f"Countour {i}", cv.WINDOW_NORMAL)
-            cv.imshow(f"Countour {i}", copy_img)
-
-    if show_contours_info:
-        cv.waitKey(0)
-        cv.destroyAllWindows()
-
-    contours = contours_reduced
+    contours, is_closed = approximate_contours(
+        contours,
+        is_closed,
+        diagonal,
+        contour_max_error,
+        original_img,
+        show_contours_info,
+    )
 
     log(
         f"Found {len(contours)} contours with a total of {sum(len(cnt) for cnt in contours)} points"
@@ -402,6 +373,50 @@ def remove_point_contours(
             new_is_closed.append(is_closed[i])
 
     return new_contours, new_is_closed
+
+
+def approximate_contours(
+    contours: list[np.array],
+    is_closed: list[bool],
+    diagonal: float,
+    contour_max_error: float,
+    image: np.array,
+    show_contours_info: bool = False,
+) -> tuple:
+    """Aproximate the contours reducing the number of points"""
+
+    contours_reduced = []
+
+    for i, cnt in enumerate(contours):
+
+        contours_reduced.append(
+            cv.approxPolyDP(
+                cnt,
+                contour_max_error,
+                is_closed[i],
+            )
+        )
+
+        if show_contours_info:
+            copy_img = image.copy()
+            for point in contours_reduced[i]:
+
+                cv.circle(
+                    copy_img,
+                    tuple(point[0]),
+                    round(0.005 * diagonal),
+                    (0, 0, 255),
+                    -1,
+                )
+
+            cv.namedWindow(f"Countour {i}", cv.WINDOW_NORMAL)
+            cv.imshow(f"Countour {i}", copy_img)
+
+    if show_contours_info:
+        cv.waitKey(0)
+        cv.destroyAllWindows()
+
+    return contours_reduced, is_closed
 
 
 def are_close(points: list[np.array], diagonal: float, threshold: float) -> bool:
