@@ -47,7 +47,7 @@ def main():
     if USE_ROLL:
         points = robot.add_rolls(points)
 
-    robot.create_vector_of_points(points)
+    robot.create_vector_of_points(points, USE_ROLL)
 
     log("Starting the draw")
     writer.send_command(

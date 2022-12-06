@@ -36,7 +36,7 @@ class Robot:
 
         return Point(*(self.decode_cartesian(coords[c]) for c in ["X", "Y", "Z"]))
 
-    def create_vector_of_points(self, points: list[Point]):
+    def create_vector_of_points(self, points: list[Point], use_roll: bool):
         """Creates a vector of points by following the steps in the special notes of the lab slides"""
 
         # Step 1.1
@@ -54,6 +54,10 @@ class Robot:
 
             # Step 3 (preventing the creation of a temporary point outside the working zone)
             enc_coords = self.get_encoded_cartesian_coordinates(points[i])
+
+            if not use_roll:
+                enc_coords.pop("R")
+
             keys = list(enc_coords.keys())
 
             error = True
