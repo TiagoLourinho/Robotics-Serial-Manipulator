@@ -5,11 +5,12 @@ from utils import log, get_scale
 
 ### Hyperparameters ###
 
-IMAGE_PATH = "Lab1/images/house.png"
+IMAGE_PATH = "Lab1/images/test_draw_2.png"
 SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
-WRITE_TO_SERIAL = False
-SHOW_CONTOURS_INFO = True
+WRITE_TO_SERIAL = True
+SHOW_CONTOURS_INFO = False
+USE_ROLL = False
 
 CONTOUR_MAX_ERROR = 20
 JOIN_CONTOURS_THRESHOLD = 0.01
@@ -42,7 +43,10 @@ def main():
     points.append(starting_point + Point(0, 0, ELEVATION))
 
     log("Creating the trajectory (vector of points) to follow inside the robot")
-    points = robot.add_rolls(points)
+
+    if USE_ROLL:
+        points = robot.add_rolls(points)
+
     robot.create_vector_of_points(points)
 
     log("Starting the draw")

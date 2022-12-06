@@ -1,5 +1,5 @@
 class Point:
-    """A point represented in cartesian coordinates"""
+    """A point represented in cartesian coordinates with pitch and roll"""
 
     def __init__(
         self, x: float = 0, y: float = 0, z: float = 0, p: float = 0, r: float = 0
