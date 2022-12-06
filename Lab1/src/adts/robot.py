@@ -1,5 +1,6 @@
 from random import shuffle
 from progressbar import progressbar
+import numpy as np
 
 
 from adts import Point, Writer
@@ -89,6 +90,7 @@ class Robot:
             "X": self.encode_cartesian(point.x),
             "Y": self.encode_cartesian(point.y),
             "Z": self.encode_cartesian(point.z),
+            "R": self.encode_cartesian(point.r),
         }
 
     def encode_cartesian(self, value: float) -> int:
@@ -100,3 +102,39 @@ class Robot:
         """Decodes a cartesian coordinate"""
 
         return value / 10
+
+    def add_rolls(self, points: list[Point]) -> list[Point]:
+        """Function that given a list of points returns a list of points also considering the rolls to maximize the pen stability"""
+
+        min_roll = -24.6
+        max_roll = -205.1
+
+        new_points = []
+
+        new_points.append(points[0] + Point(r=min_roll))
+
+        # Initial point is the starting point elevated
+        z_elevated = points[0].z
+
+        for i in range(1, len(points) - 1):
+
+            new_points.append(points[i] + Point(r=new_points[-1].r))
+
+            # If in the same plane and in the paper:
+            if points[i].z == points[i + 1].z and points[i].z < z_elevated:
+
+                angle = np.degrees(
+                    np.arctan2(
+                        (points[i + 1].x - points[i].x), (points[i + 1].y - points[i].y)
+                    )
+                )
+                if angle < 0:
+                    angle += 180
+
+                roll = round(min_roll + (angle / 180) * (max_roll - min_roll))
+
+                new_points.append(points[i] + Point(r=roll))
+
+        new_points.append(points[-1] + Point(r=min_roll))
+
+        return new_points
