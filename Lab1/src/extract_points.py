@@ -322,19 +322,47 @@ def join_open_contours(
                 current_cnt = cnt
                 for j in range(i + 1, len(contours)):
 
-                    if (
-                        not joined[j]
-                        and not is_closed[j]
-                        and are_close(
+                    if not joined[j] and not is_closed[j]:
+                        if are_close(
                             np.array([current_cnt[-1], contours[j][0]]),
                             diagonal,
                             join_contours_threshold,
-                        )
-                    ):
+                        ):  # If the end of the current contour is close to the start of the next contour
 
-                        current_cnt = np.append(current_cnt, contours[j], 0)
+                            current_cnt = np.append(current_cnt, contours[j], 0)
 
-                        joined[j] = True
+                            joined[j] = True
+                        elif are_close(
+                            np.array([current_cnt[0], contours[j][-1]]),
+                            diagonal,
+                            join_contours_threshold,
+                        ):  # If the start of the current contour is close to the end of the next contour
+
+                            current_cnt = np.append(contours[j], current_cnt, 0)
+
+                            joined[j] = True
+                        elif are_close(
+                            np.array([current_cnt[-1], contours[j][-1]]),
+                            diagonal,
+                            join_contours_threshold,
+                        ):  # If the end of the current contour is close to the end of the next contour
+
+                            current_cnt = np.append(
+                                current_cnt, np.flip(contours[j], 0), 0
+                            )
+
+                            joined[j] = True
+                        elif are_close(
+                            np.array([current_cnt[0], contours[j][0]]),
+                            diagonal,
+                            join_contours_threshold,
+                        ):  # If the start of the current contour is close to the start of the next contour
+
+                            current_cnt = np.append(
+                                np.flip(contours[j], 0), current_cnt, 0
+                            )
+
+                            joined[j] = True
 
                 new_contours.append(current_cnt)
                 new_is_closed.append(
