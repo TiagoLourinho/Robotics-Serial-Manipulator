@@ -29,6 +29,9 @@ class Writer:
                 stopbits=serial.STOPBITS_ONE,
             )
 
+            self.serial_port.reset_input_buffer()
+            self.serial_port.reset_output_buffer()
+
         else:
             self.commands_file = os.path.normpath("Lab1/text_files/commands.txt")
             # Create the file
