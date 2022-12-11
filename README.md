@@ -1,5 +1,5 @@
 # Robotics
-Repository for the Robotics course including laboratories 1, 2 and paper related.
+Repository for the Robotics Lab 1 (serial manipulator)
 
 ## Steps to enable serial port in Linux:
 1. `ls /dev/ttyU*`
