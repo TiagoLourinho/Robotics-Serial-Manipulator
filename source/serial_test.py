@@ -71,5 +71,5 @@ for cmd in commands:
 
 json_string = json.dumps(reports, indent=4)
 
-with open("Lab1/text_files/report.json", "w") as f:
+with open("text_files/report.json", "w") as f:
     f.write(json_string)

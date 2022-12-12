@@ -13,7 +13,7 @@ class Writer:
     ):
         self.write_to_serial = write_to_serial
 
-        self.logs_file = os.path.normpath("Lab1/text_files/logs.txt")
+        self.logs_file = os.path.normpath("text_files/logs.txt")
         # Create the file
         with open(self.logs_file, "w") as f:
             pass
@@ -33,7 +33,7 @@ class Writer:
             self.serial_port.reset_output_buffer()
 
         else:
-            self.commands_file = os.path.normpath("Lab1/text_files/commands.txt")
+            self.commands_file = os.path.normpath("text_files/commands.txt")
             # Create the file
             with open(self.commands_file, "w") as f:
                 pass
@@ -72,6 +72,7 @@ class Writer:
                 output += self.serial_port.read(to_read).decode("Ascii")
 
                 if ">" in output:
+                    time.sleep(max_time_between_writes / 3)
                     break
 
                 start_time = time.time()

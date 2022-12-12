@@ -45,7 +45,8 @@ def find_contours(
     image: str,
     contour_max_error: float,
     join_contours_threshold: float,
-    show_contours_info: bool = False,
+    show_contours_info: bool,
+    allow_lift_pen: bool,
 ) -> tuple:
     """Finds the contours of the `image` and filters them"""
 
@@ -85,6 +86,11 @@ def find_contours(
     contours, is_closed = remove_point_contours(
         contours, is_closed, diagonal, join_contours_threshold
     )
+
+    contours, is_closed = make_one_line_contours(
+        contours, is_closed, diagonal, join_contours_threshold, allow_lift_pen
+    )
+
     contours, is_closed = approximate_contours(
         contours,
         is_closed,
@@ -398,6 +404,96 @@ def remove_point_contours(
 
         if not are_close(cnt, diagonal, join_contours_threshold):
             new_contours.append(cnt)
+            new_is_closed.append(is_closed[i])
+
+    return new_contours, new_is_closed
+
+
+def make_one_line_contours(
+    contours: list[np.array],
+    is_closed: list[bool],
+    diagonal: float,
+    join_contours_threshold: float,
+    allow_lift_pen: bool,
+) -> tuple:
+    """Join contours that are possible to draw just in one line
+
+    Strategy:    If any point from a contour is close to the start or end to other contour, join them
+    """
+
+    empty_array = np.array([], dtype=np.int64).reshape(
+        (0, 1, 2)
+    )  # To concatenate with nothing
+
+    new_contours = []
+    new_is_closed = []
+    joined = [False] * len(contours)
+
+    # Loop through all contours
+    for i, cnt in enumerate(contours):
+        if not joined[i]:
+
+            current_cnt = None  # Keep track of the merged contour
+            current_i = 0  # Keep track of the last point merged
+
+            # Loop through all contour's points
+            for j, pnt in enumerate(cnt):
+
+                # Loop through all other contours
+                for k in range(i + 1, len(contours)):
+                    if not joined[k]:
+
+                        # The point is close to the start of the other contour
+                        if are_close(
+                            [pnt, contours[k][0]], diagonal, join_contours_threshold
+                        ) and (is_closed[k] or not allow_lift_pen):
+
+                            current_cnt = np.concatenate(
+                                [
+                                    current_cnt
+                                    if current_cnt is not None
+                                    else empty_array,
+                                    cnt[current_i : j + 1],
+                                    contours[k],
+                                    np.flip(contours[k], axis=0)
+                                    if not is_closed[k]
+                                    else empty_array,
+                                ],
+                                axis=0,
+                            )
+
+                            joined[k] = True
+                            current_i = j + 1
+
+                        # The point is close to the end of the other contour
+                        elif are_close(
+                            [pnt, contours[k][-1]], diagonal, join_contours_threshold
+                        ) and (is_closed[k] or not allow_lift_pen):
+                            # If its open append it and also the way back
+                            current_cnt = np.concatenate(
+                                [
+                                    current_cnt
+                                    if current_cnt is not None
+                                    else empty_array,
+                                    cnt[current_i : j + 1],
+                                    np.flip(contours[k], axis=0),
+                                    contours[k]
+                                    if not is_closed[k]
+                                    else np.array([]).reshape((0, 1, 2)),
+                                ],
+                                axis=0,
+                            )
+
+                            joined[k] = True
+                            current_i = j + 1
+
+            # If there wasn't any merge just append the original contour
+            if current_cnt is not None:
+                current_cnt = np.append(current_cnt, cnt[current_i:], axis=0)
+            else:
+                current_cnt = cnt
+
+            new_contours.append(current_cnt)
             new_is_closed.append(is_closed[i])
 
     return new_contours, new_is_closed
