@@ -71,10 +71,6 @@ class Writer:
             if to_read > 0:
                 output += self.serial_port.read(to_read).decode("Ascii")
 
-                if ">" in output:
-                    time.sleep(max_time_between_writes / 3)
-                    break
-
                 start_time = time.time()
 
             if time.time() - start_time > max_time_between_writes:
