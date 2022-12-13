@@ -40,14 +40,13 @@ def main():
     points = get_list_points_to_draw(contours, is_closed, ELEVATION / scale)
 
     log("Retrieving starting point of the robot")
-    starting_point = robot.get_starting_point(WRITE_TO_SERIAL)
+    starting_point = robot.get_starting_point(WRITE_TO_SERIAL, ELEVATION)
 
     log("Transfering points to robot's referencial")
     points = list(
         map(lambda point: point.flip_horizontally() * scale + starting_point, points)
     )
 
-    points.insert(0, starting_point + Point(0, 0, ELEVATION))
     points.append(starting_point + Point(0, 0, ELEVATION))
 
     log("Creating the trajectory (vector of points) to follow inside the robot")
