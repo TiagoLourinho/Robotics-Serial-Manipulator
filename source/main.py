@@ -14,7 +14,7 @@ SHOW_CONTOURS_INFO = True
 
 # Contour control
 CONTOUR_MAX_ERROR = 10
-JOIN_CONTOURS_THRESHOLD = 0.01
+JOIN_CONTOURS_THRESHOLD = 0.01  # Percentage of the cropped image diagonal
 
 # Drawing control
 ALLOW_LIFT_PEN = False
