@@ -75,7 +75,7 @@ def find_contours(
     # Sort by area
     contours = sorted(list(contours), key=lambda cnt: cv.contourArea(cnt), reverse=True)
 
-    # Filter contours
+    # Contours post-processing
     contours, is_closed = classify_contours(contours)
     contours, is_closed = remove_duplicate_parts_in_contours(
         skeleton_img, contours, is_closed

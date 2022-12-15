@@ -10,18 +10,18 @@ SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
 # Debug
 WRITE_TO_SERIAL = True
-SHOW_CONTOURS_INFO = False
+SHOW_CONTOURS_INFO = True
 
 # Contour control
 CONTOUR_MAX_ERROR = 10
 JOIN_CONTOURS_THRESHOLD = 0.01
 
 # Drawing control
+ALLOW_LIFT_PEN = False
+USE_ROLL = False
 DRAWING_AREA = 10000  # mm^2
 ELEVATION = 20  # mm
 TIME_PER_POINT = 100  # ms
-USE_ROLL = False
-ALLOW_LIFT_PEN = False
 
 
 def main():
