@@ -7,9 +7,8 @@ from matplotlib.widgets import Slider, Button
 
 draw_points = np.array([0, 0 ,0, 1])
 
-
-fig, ax = plt.subplots(1, 1)
-ax = plt.axes(projection='3d')
+fig = plt.figure()
+ax = fig.add_subplot(1, 1,1, projection='3d')
 ax.set_xlim(-2, 2)
 ax.set_ylim(-2, 2) 
 ax.set_zlim(-0, 2)
