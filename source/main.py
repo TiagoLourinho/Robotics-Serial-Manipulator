@@ -10,18 +10,18 @@ SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
 # Debug
 WRITE_TO_SERIAL = True
-SHOW_CONTOURS_INFO = False
+SHOW_CONTOURS_INFO = True
 
 # Contour control
-CONTOUR_MAX_ERROR = 20
-JOIN_CONTOURS_THRESHOLD = 0.01
+CONTOUR_MAX_ERROR = 10
+JOIN_CONTOURS_THRESHOLD = 0.01  # Percentage of the cropped image diagonal
 
 # Drawing control
-DRAWING_AREA = 5000  # mm^2
-ELEVATION = 10  # mm
-TIME_PER_POINT = 100  # ms
-USE_ROLL = True
 ALLOW_LIFT_PEN = False
+USE_ROLL = False
+DRAWING_AREA = 10000  # mm^2
+ELEVATION = 20  # mm
+TIME_PER_POINT = 100  # ms
 
 
 def main():
@@ -40,14 +40,13 @@ def main():
     points = get_list_points_to_draw(contours, is_closed, ELEVATION / scale)
 
     log("Retrieving starting point of the robot")
-    starting_point = robot.get_starting_point(WRITE_TO_SERIAL)
+    starting_point = robot.get_starting_point(WRITE_TO_SERIAL, ELEVATION)
 
     log("Transfering points to robot's referencial")
     points = list(
         map(lambda point: point.flip_horizontally() * scale + starting_point, points)
     )
 
-    points.insert(0, starting_point + Point(0, 0, ELEVATION))
     points.append(starting_point + Point(0, 0, ELEVATION))
 
     log("Creating the trajectory (vector of points) to follow inside the robot")

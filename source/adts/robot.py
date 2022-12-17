@@ -12,12 +12,12 @@ class Robot:
     def __init__(self, writer: Writer):
         self.writer = writer
 
-    def get_starting_point(self, write_to_serial: bool) -> Point:
+    def get_starting_point(self, write_to_serial: bool, elevation: float) -> Point:
         """Retrieves the initial point from the robot"""
 
-        self.writer.send_command("DEFP cur")
-        self.writer.send_command("HERE cur")
-        tokens = self.writer.send_command("LISTPV cur", not write_to_serial)
+        self.writer.send_command("DEFP start")
+        self.writer.send_command("HERE start")
+        tokens = self.writer.send_command("LISTPV start", not write_to_serial)
 
         # See example of the response got from the robot in README.md
         tokens = tokens[tokens.index("1:") :].replace(": ", ":").split()[:-1]
@@ -33,6 +33,10 @@ class Robot:
             key: int(tokens[i][tokens[i].index(":") + 1 :])
             for i, key in enumerate([1, 2, 3, 4, 5, "X", "Y", "Z", "P", "R"])
         }
+
+        # Lift the pen after getting initial point
+        self.writer.send_command(f'SETPVC start Z {coords["Z"] + round(elevation*10)}')
+        self.writer.send_command(f"MOVE start")
 
         return Point(*(self.decode_cartesian(coords[c]) for c in ["X", "Y", "Z"]))
 
