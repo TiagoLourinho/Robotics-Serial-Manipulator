@@ -13,6 +13,12 @@ class Writer:
     ):
         self.write_to_serial = write_to_serial
 
+        # Create the logs folder
+        try:
+            os.mkdir("text_files")
+        except FileExistsError:
+            pass
+
         self.logs_file = os.path.normpath("text_files/logs.txt")
         # Create the file
         with open(self.logs_file, "w") as f:
