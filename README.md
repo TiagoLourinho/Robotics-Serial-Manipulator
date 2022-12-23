@@ -6,6 +6,9 @@ A program capable of making the Scorbot ER-7 draw a given image
 - Tiago Lourinho (96327)
 - Tiago Ferreira (96334)
 
+### External packages needed
+Defined in `requirements.txt`
+
 ### Code structure
 - `main.py` - Program to run which contains the control panel
 - `extract_points.py` - Functions related to image processing
