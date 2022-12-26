@@ -7,7 +7,7 @@ A program capable of making the Scorbot ER-7 draw a given image
 - Tiago Ferreira (96334)
 
 ### External packages needed
-Defined in `requirements.txt`
+Defined in `requirements.txt` (install before using the program)
 
 ### Code structure
 - `main.py` - Program to run which contains the control panel
