@@ -9,7 +9,7 @@ IMAGE_PATH = "images/test_draw_2.png"
 SERIAL_PORT = "/dev/ttyUSB0"  # Others: COM4, ttyUSB1
 
 # Debug
-WRITE_TO_SERIAL = True
+WRITE_TO_SERIAL = False
 SHOW_CONTOURS_INFO = True
 
 # Contour control
