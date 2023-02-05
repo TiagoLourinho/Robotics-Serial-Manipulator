@@ -52,3 +52,17 @@ Defined in `requirements.txt` (install before using the program)
 
 *Note:* The logs and the commands sent can be seen in the directory `text_files/`
 
+
+# Example
+
+Initial image:
+
+![Initial image](images/fish.png "fish")
+
+Identified contours:
+
+![Identified contours](images/example_fish_contours.png "fish")
+
+Final drawing:
+
+![Final drawing](images/example_fish_draw.jpg "fish")
