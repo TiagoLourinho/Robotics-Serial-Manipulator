@@ -1,4 +1,4 @@
-# Robotics - Lab 1 - Serial Manipulator
+# Serial Manipulator Drawings
 A program capable of making the Scorbot ER-7 draw a given image
 
 ## Authors
